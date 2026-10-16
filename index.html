@@ -167,7 +167,7 @@ let mode='s',FEV=[];
 const ga=w=>{const c=w.charCodeAt(w.length-1);return (c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28)?w+'이':w+'가'};
 const HINT={c:'보고 싶은 영상 아이디어를 적고 문구를 복사해서 인스타 아무 영상에나 댓글로 붙여 주세요. 좋은 아이디어는 실제 영상으로 만들어요.',s:'직업 이름을 적으면 이미 나왔는지, 신청이 몇 명 모였는지 알려 드려요.',l:'직업 이름을 적으면 그 직업이 되는 과정을 롱폼으로 신청할 수 있어요.'};
 function btns(text,where,label='신청 문구 복사'){return `<div class="btns"><button class="btn" type="button" data-copy="${esc(text)}">${label}</button>${where.map(([l,u],i)=>`<a class="btn${i?' alt':' alt'}" href="${u}" target="_blank" rel="noopener">${l} ▶</a>`).join('')}<span class="copied" hidden>복사했어요!</span></div>`}
-function render(){
+function render(){q._lv=q.value;
  if(mode==='c'&&SITE){const v=$('idea').value.trim();res.innerHTML=`<p>보고 싶은 영상 아이디어를 적고 보내 주세요. 좋은 아이디어는 실제 영상으로 만들어요.</p>`+siteForm('콘텐츠 제안',v,false);return}
  if(mode==='c'){const v=$('idea').value.trim();res.innerHTML=`<p>${HINT.c}</p>`+btns('콘텐츠 제안: '+(v||'…'),[['인스타에 남기기',IGP],['유튜브에 남기기',YTP]],'제안 문구 복사');const cb=res.querySelector('[data-copy]');cb.disabled=!v;cb.style.opacity=v?1:.5;return}
  const raw=q.value.trim(), qq=norm(raw);
