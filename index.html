@@ -218,16 +218,16 @@ const _NM=new Map(),norm=s=>{let r=_NM.get(s);if(r===undefined){r=s.toLowerCase(
 const $=id=>document.getElementById(id), res=$('res'), q=$('q');
 const IGP='https://www.instagram.com/p/DeiWfMzD52e/', YTP='https://www.youtube.com/@jobdogam';
 const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const hit=(name,qq,keys='')=>{const a=norm(name+' '+keys);return a.includes(qq)||(qq.length>=2&&qq.includes(norm(name)))};
+const hit=(name,qq,keys='')=>{const a=norm(name+' '+keys);return a.includes(qq)||(qq.length>=2&&qq.includes(norm(name)))};const same=(name,qq,keys='')=>norm(name)===qq||String(keys||'').split(/\s+/).some(k=>k&&norm(k)===qq);
 let mode='s',FEV=[];
 //ING>
 const BAD=/(시발|씨발|ㅅㅂ|병신|ㅂㅅ|좆|존나|개새|새끼|섹스|sex|fuck|shit|자살|느금|애미|니미)/i;
 const JUNK=j=>{const t=j.replace(/\s/g,'').replace(/[ㄱ-ㅎㅏ-ㅣ]$/,'');return t.length>20||/[ㄱ-ㅎㅏ-ㅣ]/.test(t)||/(.)\1\1/.test(t)||/[0-9!?~@#$%^&*=+<>{}\[\]|\\/]/.test(t)||!/[가-힣a-zA-Z]{2}/.test(t)||/^[a-zA-Z]+$/.test(t)&&!/[aeiou]/i.test(t)||/(ㅋㅋ|ㅎㅎ|아무거나|몰라|없음|테스트|test|asdf|qwer)/i.test(t)};
 const maskNick=s=>{s=s.trim();const a=[...s];return a.length<=2?a[0]+'*':a.slice(0,2).join('')+'***'};
-let FC=null;function findReq(m,job){const qq=norm(job),A=m==='s'?D.reqs:D.longReqs;if(FC){const c=FC.get(m+qq);if(c!==undefined){if(typeof c!=='number')return c;if(c===A.length)return undefined}}const r=m==='s'?A.find(([n,k])=>hit(n,qq,k)):A.find(([n])=>hit(n,qq));if(FC)FC.set(m+qq,r||A.length);return r}
+let FC=null;function findReq(m,job){const qq=norm(job),A=m==='s'?D.reqs:D.longReqs;if(FC){const c=FC.get(m+qq);if(c!==undefined){if(typeof c!=='number')return c;if(c===A.length)return undefined}}const r=m==='s'?A.find(([n,k])=>same(n,qq,k)):A.find(([n])=>same(n,qq));if(FC)FC.set(m+qq,r||A.length);return r}
 function addLike(m,job){const r=findReq(m,job);if(!r)return;if(m==='s'){r[2]++;r[4]=(r[4]||0)+1}else{r[1]++;r[3]=(r[3]||0)+1}}
 function addOne(m,job,nick){let r=findReq(m,job);
-  if((D.jobHide||[]).some(h=>norm(h)===norm(job)))return false;if(!r){job=job.trim().slice(0,20);const qq=norm(job);if(JUNK(job)||BAD.test(job)||D.posted.some(([n])=>hit(n,qq))||D.up.some(n=>hit(n,qq)))return false;
+  if((D.jobHide||[]).some(h=>norm(h)===norm(job)))return false;if(!r){job=job.trim().slice(0,20);const qq=norm(job);if(JUNK(job)||BAD.test(job)||D.posted.some(([n])=>same(n,qq))||D.up.some(n=>same(n,qq)))return false;
     r=m==='s'?[job,job,0,[],0,'새 신청']:[job,0,[],0];(m==='s'?D.reqs:D.longReqs).push(r)}
   if(m==='s'){r[2]++;r[3]=[...(r[3]||[]),maskNick(nick)]}else{r[1]++;r[2]=[...(r[2]||[]),maskNick(nick)]}return true}
 function parseCSV(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];
@@ -267,19 +267,20 @@ function render(){if(mode==='u')return;q._lv=q.value;
  const raw=q.value.trim(), qq=norm(raw);
  if(qq.length<2){res.innerHTML=`<p>${HINT[mode]}</p>`;return}
  if(mode==='s'){
-  const p=D.posted.find(([n])=>hit(n,qq));
+  const p=D.posted.find(([n])=>same(n,qq)),pSim=p?null:D.posted.find(([n])=>hit(n,qq));
   if(p){res.innerHTML=`<div class="msg ok">✔ 이미 공개됐어요!</div><div class="btns"><a class="btn" href="${p[1]}" target="_blank" rel="noopener">${esc(p[0])} 보러 가기 ▶</a>${TOOLS[p[0]]?`<a class="btn tb" href="${TOOLS[p[0]][0]}" target="_blank" rel="sponsored noopener">🧰 관련 물품 보기 (${esc(TOOLS[p[0]][1])})</a>`:''}</div>${TOOLS[p[0]]?'<p class="fine adn2">관련 물품 링크는 쿠팡 파트너스 링크라 구매 시 수수료를 받아요.</p>':''}`;return}
-  const u=D.up.find(n=>hit(n,qq));
+  const u=D.up.find(n=>same(n,qq));
   if(u){res.innerHTML=`<div class="msg soon">★ 공개 예정 직업이에요!</div><p>이미 만들었거나 만들고 있어요. 언제 올라갈지는 비밀! 팔로우하고 기다려 주세요.</p>`;return}
-  {const cf=(D.conf||[]).find(n=>hit(n,qq));if(cf){res.innerHTML=`<div class="msg soon">🎬 「${esc(cf)}」 제작 확정!</div><p>지금 만들고 있어요. 곧 공개되니 팔로우하고 기다려 주세요.</p>`;return}}
-  const r=D.reqs.find(([n,k])=>hit(n,qq,k)), txt=`직업 신청: ${raw}`;
+  {const cf=(D.conf||[]).find(n=>same(n,qq));if(cf){res.innerHTML=`<div class="msg soon">🎬 「${esc(cf)}」 제작 확정!</div><p>지금 만들고 있어요. 곧 공개되니 팔로우하고 기다려 주세요.</p>`;return}}
+  const r=D.reqs.find(([n,k])=>same(n,qq,k)), rSim=r?null:D.reqs.find(([n,k])=>hit(n,qq,k)), txt=`직업 신청: ${raw}`;
+  const simH=(pSim?`<p class="fine">비슷한 영상: <a href="${pSim[1]}" target="_blank" rel="noopener">${esc(pSim[0])} ▶</a></p>`:'')+(rSim?`<p class="fine">비슷한 신청 「${esc(rSim[0])}」도 있어요. 같은 직업이면 그쪽에 ♡를 눌러 주세요. 다른 직업이면 그대로 신청하면 돼요.</p>`:'');
   if(SITE&&!r&&JUNK(raw)){res.innerHTML=`<div class="msg">🤔 직업 이름만 짧게 적어 주세요.</div><p>예: 소방관, 웹툰 작가, 항공 정비사</p>`;return}
-  res.innerHTML=(r?`<div class="msg new">${esc(r[0])} — 지금 ${r[2]}명${r[4]?` (좋아요 ♥${r[4]} 포함)`:''}</div>${r[3]&&r[3].length?`<details class="who2"><summary>신청한 사람</summary>${esc(r[3].join(' · '))}</details>`:''}<p>${SITE?(isDone('쇼츠',r[0])||isDone('쇼츠',raw)?'순위에 올라갔어요! 친구에게도 ♡ 부탁해 보세요. 많을수록 빨리 만들어요.':'이미 신청이 들어온 직업이에요. 보고 싶다면 ♡를 눌러 주세요! 많을수록 빨리 만들어요.'):'아직 신청 안 했다면 인스타 아무 영상에나 댓글로 남겨 주세요. 신청이 많을수록 빨리 만들어요.'}</p>`:(SITE&&isDone('쇼츠',raw)?`<div class="msg ok">🎉 「${esc(raw)}」 신청 접수됐어요! 고마워요.</div><p>${'처음 들어온 직업도 순위에 바로 올라가요. (이상한 신청은 밤 11시에 정리돼요)'}</p>`:`<div class="msg new">처음 들어온 직업이에요!</div><p>${SITE?'닉네임을 적고 신청하면 접수돼요.':'인스타 아무 영상 댓글에 남겨 주시면 신청 순위에 올려 드려요.'}</p>`))+(SITE?(r?bigLike('s',r[0]):siteForm('쇼츠',raw,false)):btns(txt,[['인스타에 남기기',IGP]]));
+  res.innerHTML=simH+(r?`<div class="msg new">${esc(r[0])} — 지금 ${r[2]}명${r[4]?` (좋아요 ♥${r[4]} 포함)`:''}</div>${r[3]&&r[3].length?`<details class="who2"><summary>신청한 사람</summary>${esc(r[3].join(' · '))}</details>`:''}<p>${SITE?(isDone('쇼츠',r[0])||isDone('쇼츠',raw)?'순위에 올라갔어요! 친구에게도 ♡ 부탁해 보세요. 많을수록 빨리 만들어요.':'이미 신청이 들어온 직업이에요. 보고 싶다면 ♡를 눌러 주세요! 많을수록 빨리 만들어요.'):'아직 신청 안 했다면 인스타 아무 영상에나 댓글로 남겨 주세요. 신청이 많을수록 빨리 만들어요.'}</p>`:(SITE&&isDone('쇼츠',raw)?`<div class="msg ok">🎉 「${esc(raw)}」 신청 접수됐어요! 고마워요.</div><p>${'처음 들어온 직업도 순위에 바로 올라가요. (이상한 신청은 밤 11시에 정리돼요)'}</p>`:`<div class="msg new">처음 들어온 직업이에요!</div><p>${SITE?'닉네임을 적고 신청하면 접수돼요.':'인스타 아무 영상 댓글에 남겨 주시면 신청 순위에 올려 드려요.'}</p>`))+(SITE?(r?bigLike('s',r[0]):siteForm('쇼츠',raw,false)):btns(txt,[['인스타에 남기기',IGP]]));
  } else {
   const d=D.longDone.find(([t])=>norm(t).includes(qq));
   if(d){res.innerHTML=`<div class="msg ok">✔ 이미 롱폼이 있어요!</div><div class="btns"><a class="btn" href="${d[1]}" target="_blank" rel="noopener">${esc(d[0])} ▶</a></div>`;return}
   if(D.longNext.some(t=>norm(t).includes(qq))){res.innerHTML=`<div class="msg soon">★ 지금 만들고 있어요!</div><p>곧 유튜브에 올라가요. 구독하고 기다려 주세요.</p>`;return}
-  const r=D.longReqs.find(([n])=>hit(n,qq)), txt=`롱폼 신청: ${ga(raw)} 되기까지`;
+  const r=D.longReqs.find(([n])=>same(n,qq)), txt=`롱폼 신청: ${ga(raw)} 되기까지`;
   if(SITE&&!r&&JUNK(raw)){res.innerHTML=`<div class="msg">🤔 직업 이름만 짧게 적어 주세요.</div><p>예: 소방관, 웹툰 작가, 항공 정비사</p>`;return}
   res.innerHTML=(r?`<div class="msg new">${esc(r[0])} — 지금 ${r[1]}명 신청</div>${r[2]&&r[2].length?`<details class="who2"><summary>신청한 사람</summary>${esc(r[2].join(' · '))}</details>`:''}`:`<div class="msg new">「${esc(ga(raw))} 되기까지의 여정」 신청할게요!</div>`)+`<p>${SITE?(r?'보고 싶다면 ♡를 눌러 주세요!':'아래에서 바로 신청해 주세요.'):'유튜브 영상 댓글이나 인스타 아무 영상에나 댓글로 남겨 주세요.'} 되는 과정이 긴 직업일수록 롱폼으로 만들기 좋아요.</p>`+(SITE?(r?bigLike('l',r[0]):siteForm('롱폼',raw,false)):btns(txt,[['유튜브에 남기기',YTP],['인스타에 남기기',IGP]]));
  }
