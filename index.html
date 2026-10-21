@@ -1172,5 +1172,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 <style id="formFix">.sform{display:grid!important;gap:10px}.sform label{display:grid!important;gap:6px;width:100%!important;height:auto!important;position:static!important;clip:auto!important;clip-path:none!important;overflow:visible!important;margin:0!important;font-weight:700;font-size:13px}.sform input,.cmf input,#stf input[type=text],#stf textarea{width:100%!important;min-width:0!important;box-sizing:border-box;min-height:44px;font-size:16px}.cmf{display:grid!important;gap:8px}#askbox .sform label{color:#E6EDF5!important}#askbox .sform label small{color:#C9D6E6!important}</style>
+<script>window.__YTR={"DeeKeKzxZzj": "yaCH6mhBE-w", "DeeOBukR6UQ": "ysjBe53LhTQ", "DeeagRmCl8M": "X7_nDJNeQBY", "DeehWzOCHKw": "dg1TDztLwkg", "DeeoUMcFAGg": "qhda0cQbZ8A", "DeeV2uDxhDX": "fwzUt0o2Zn0", "Dee821im2w-": "sV9PYd-FIX0", "DefRfjugTb_": "78W6FQY2Sog", "DefmA6sDJsQ": "XYHNRpiLqpo", "Def6vENjC5n": "Izyge6PNpAY", "DegPOKaj-vj": "3rdGHtOFk0Y", "Degj7MqD4A2": "b57__qd7Peo", "Deg4iaPCL66": "JcXrZD6-kZ8", "Deg_mkylPP0": "i2w8PvclHaM", "DehNHdclBCW": "n5sZ-txjNlc", "Dehhn9GCYQl": "Jy4dTVbl2T4", "Deh2PjYlPyJ": "xIeOiMqZ6C0", "DeiK3jDFmeH": "w1q42zQZmeM", "Def5UMpRiy2": "9CF3nxu1Zr8", "DeifdxqAprP": "CcWZvMoJQG4", "Dei0EfWDX1H": "S_8VElhVtf8", "DejItOsD1OH": "dLHgIojre-w", "DejROF_AaiG": "cuY2gU7RAdo", "DejdTcJgGSj": "vI5pdwpoNzw", "Dejx5c-DTdb": "ZqfUj-NjHYo", "DekGfTjCfZZ": "QdfjnlaDqSI", "DekbECxiO6V": "MH0UjhO5pi4", "Dekvpiijstr": "eCmj_Zwsn2U", "DelEQ9IjnkJ": "PiqHMThd9Zc", "DelYzgZlKVo": "wC_Pgul-_H8", "Deltd0bDKbe": "clkU2XQVqK0", "DemCBUhiblC": "rIeZ3Z4my3Q", "DemO4HMRbiC": "Zq1K0hSwggs", "DemWqqQkuDA": "ELuuXGv4yyM", "DemrSn0DDmd": "_KU9iy9AHp4", "Dem_20UgQc4": "dxFOrQEfqkM", "DenUbgOiPnF": "gRWBqlsvEpM", "DenpCxsAIM8": "cPKj8N3XGbA", "Den9o2KiiJJ": "-0qyrqOiXh0", "Deofa3kEtkK": "Bbb2cmUc6To", "DepyaJrlSz2": "e4daEYZ2ZQM", "DeqN1yagG81": "8KzUG5UQBUQ", "Deq3BawjA3B": "uW-3ychx0tw", "DerDC_Umzjy": "A9fJegaMefk", "DerSefXlDhi": "E-qsCbCZA1c", "DesXOl9iHa6": "IXQbRt-JGRo", "DesyqANjQVR": "mD8PfoXcnl8", "Detn1-eCvF8": "D8YyI-9woNw", "Det5BMTCekD": "ElYu-ZvNrqE", "Deu8DegAjHC": "M1mjuZ8lNDQ", "DevnauMFHau": "qlTkiAoQmM4", "DewMnmRCMXT": "vxs-j-_s1gQ", "DewcEmCgHmP": "ttDngSFMnPo"};</script>
+<script id="ytLinkJs">
+/* 10/22 사용자 결정: 인스타 앱 안에서 열면 릴스, 그 밖은 유튜브 쇼츠(ID 있는 편만) */
+(function(){
+var ig=/Instagram|FBAN|FBAV|FB_IAB/i.test(navigator.userAgent||'');
+if(ig)return;
+function map(){try{return window.__YTR||(typeof D!=='undefined'&&D&&D.ytr)||{}}catch(e){return window.__YTR||{}}}
+function fix(a){if(a.dataset.yt)return;var m=(a.getAttribute('href')||'').match(/instagram\.com\/reel\/([\w-]+)/);if(!m)return;var id=map()[m[1]];a.dataset.yt=id?'1':'0';if(!id)return;
+ a.href='https://www.youtube.com/shorts/'+id;
+ var g=a.querySelectorAll('.go');for(var i=0;i<g.length;i++)g[i].textContent=g[i].textContent.replace('릴스','쇼츠');
+ if(!g.length&&/릴스/.test(a.textContent)&&a.children.length===0)a.textContent=a.textContent.replace('릴스','쇼츠');}
+function scan(){var l=document.querySelectorAll('a[href*="instagram.com/reel/"]:not([data-yt])');for(var i=0;i<l.length;i++)fix(l[i]);
+ var s=document.querySelectorAll('p.sub');for(var j=0;j<s.length;j++)if(s[j].textContent==='누르면 인스타그램 릴스로 가요.')s[j].textContent='누르면 유튜브 쇼츠로 가요.';}
+document.addEventListener('click',function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href*="instagram.com/reel/"]');if(a)fix(a)},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scan);else scan();
+setInterval(scan,1500);
+})();
+</script>
 <!--<NEWUI-->
 </body></html>
