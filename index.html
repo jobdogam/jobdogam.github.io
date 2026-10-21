@@ -1114,5 +1114,6 @@ const feed=$('feed');if(feed){[...feed.querySelectorAll('.fc')].forEach((fc,k)=>
  setInterval(()=>{if(document.hidden||items.length<2||tk.offsetParent===null)return;i=(i+1)%items.length;show(!matchMedia('(prefers-reduced-motion: reduce)').matches)},3200+k*400)})}
 }catch(e){console.error('NEWUI ticker',e)}})();
 </script>
+<style id="noCta">.ncta{display:none!important}html body,html body.app-on{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}</style>
 <!--<NEWUI-->
 </body></html>
