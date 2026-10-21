@@ -936,7 +936,7 @@ cta.onclick=()=>{try{showTab('req',true)}catch(_){}const q=$('q');setTimeout(()=
 // ── 화면 글자: '롱폼'→'풀버전', '숏폼'→'쇼츠' (보이는 글자만, 데이터·키는 그대로)
 const fix=n=>{const w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);let x;while(x=w.nextNode()){const v=x.nodeValue;if(v&&(v.includes('롱폼')||v.includes('숏폼'))&&!(x.parentNode&&/SCRIPT|STYLE|TEXTAREA/.test(x.parentNode.nodeName)))x.nodeValue=v.replace(/유튜브 롱폼/g,'유튜브 풀버전').replace(/롱폼/g,'풀버전').replace(/숏폼/g,'쇼츠')}
  n.querySelectorAll&&n.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(e=>{if(/롱폼|숏폼/.test(e.placeholder))e.placeholder=e.placeholder.replace(/롱폼/g,'풀버전').replace(/숏폼/g,'쇼츠')})};
-fix(document.body);let fq=0;new MutationObserver(ms=>{if(fq)return;fq=requestAnimationFrame(()=>{fq=0;ms.forEach(m=>m.addedNodes.forEach(a=>{if(a.nodeType===1)fix(a);else if(a.nodeType===3&&a.parentNode)fix(a.parentNode)}))})}).observe(document.body,{childList:true,subtree:true,characterData:false});
+fix(document.body);let fq=0;new MutationObserver(ms=>{if(fq)return;fq=setTimeout(()=>{fq=0;fix(document.body)},60)}).observe(document.body,{childList:true,subtree:true,characterData:false});
 }catch(e){console.error('NEWUI',e)}})();
 </script>
 <style>
@@ -1103,7 +1103,7 @@ window.__jdHeart=svgH;
 // 하트 글자 → SVG (보이는 글자만, 상태는 class 그대로)
 function hearts(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const L=[];let x;while(x=w.nextNode()){if(/[♥♡]/.test(x.nodeValue)&&x.parentNode&&!/SCRIPT|STYLE|TEXTAREA|OPTION|TITLE/.test(x.parentNode.nodeName)&&!x.parentNode.closest('svg'))L.push(x)}
  L.forEach(n=>{const sp=document.createElement('span');sp.style.display='contents';const on=n.parentNode.closest('.on')!==null;sp.innerHTML=n.nodeValue.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])).replace(/♥/g,svgH(1)).replace(/♡/g,()=>svgH(on));n.parentNode.replaceChild(sp,n)})}
-hearts(document.body);let hq=0;new MutationObserver(ms=>{if(hq)return;hq=requestAnimationFrame(()=>{hq=0;hearts(document.body)})}).observe(document.body,{childList:true,subtree:true,characterData:true});
+hearts(document.body);let hq=0;new MutationObserver(ms=>{if(hq)return;hq=setTimeout(()=>{hq=0;hearts(document.body)},60)}).observe(document.body,{childList:true,subtree:true,characterData:true});
 // 누르면 팝 + 조각
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!b.querySelector('svg.nh'))return;b.classList.remove('npop');void b.offsetWidth;b.classList.add('npop');
  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const r=(b.querySelector('svg.nh')||b).getBoundingClientRect();for(let i=0;i<4;i++){const f=document.createElement('span');f.className='nfrag';f.innerHTML=svgH(1);const a=-Math.PI/2+(i-1.5)*.55;f.style.left=r.left+r.width/2-5+'px';f.style.top=r.top+r.height/2-5+'px';f.style.setProperty('--dx',Math.cos(a)*26+'px');f.style.setProperty('--dy',Math.sin(a)*26+'px');document.body.appendChild(f);setTimeout(()=>f.remove(),650)}},true);
