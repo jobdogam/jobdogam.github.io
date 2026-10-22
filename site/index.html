@@ -542,7 +542,7 @@ document.addEventListener('submit',async e=>{const f=e.target;if(f.id!=='stf')re
 {const _p=paint;paint=function(){_p();paintStories()}}
 swForm();
 </script>
-<script>(function(){try{var ul=document.getElementById('today5'),nx=document.getElementById('nxt');if(!ul)return;/* 10/20부터 하루 4편(17:45 칸 없음, 사용자 결정 10/19) */if(new Date(Date.now()+9*3600e3).toISOString().slice(0,10)>='2026-10-20'){var l17=ul.querySelector('[data-t="17:45"]');if(l17){l17.remove();ul.classList.add('t4')}}function tick(){var d=new Date(Date.now()+9*3600e3),m=d.getUTCHours()*60+d.getUTCMinutes(),next=null;[].forEach.call(ul.children,function(li){var p=li.getAttribute('data-t').split(':'),t=+p[0]*60+ +p[1];li.classList.remove('nx');li.classList.toggle('done',t<=m);if(t>m&&!next)next={li:li,t:t}});if(next){next.li.classList.add('nx');var r=next.t-m,h=Math.floor(r/60),mm=r%60;nx.textContent='▶ 다음 영상 '+next.li.getAttribute('data-t')+' · '+(h?h+'시간 ':'')+mm+'분 남았어요'}else{nx.textContent='▶ 오늘 영상은 다 올라왔어요! 내일 아침 7:45에 만나요'}nx.hidden=false}tick();setInterval(tick,30000);fetch('hints.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){var d=new Date(Date.now()+9*3600e3).toISOString().slice(0,10),h=j&&j[d];if(!h)return;[].forEach.call(ul.children,function(li){var v=h[li.getAttribute('data-t')],e=li.querySelector('.hint');if(v&&e&&!e.classList.contains('rv')){e.textContent=v;e.hidden=false}})}).catch(function(){});/* 10/19 사용자 결정: 이미 올라온 칸은 직업 이름 공개 (names.json = 이름을 뒤집어 base64) */var NM=null;function dec(s){try{var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return Array.from(new TextDecoder().decode(u)).reverse().join('')}catch(e){return ''}}function rv(){if(!NM)return;var d=new Date(Date.now()+9*3600e3),k=d.toISOString().slice(0,10),m=d.getUTCHours()*60+d.getUTCMinutes(),h=NM[k]||{};[].forEach.call(ul.children,function(li){var tt=li.getAttribute('data-t'),p=tt.split(':'),t=+p[0]*60+ +p[1],e=li.querySelector('.hint');if(e&&h[tt]&&t<=m){var n=dec(h[tt]);if(n){e.textContent=n;e.hidden=false;e.classList.add('rv')}}})}fetch('names.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){NM=j;rv();setInterval(rv,30000)}).catch(function(){})}catch(e){}})();</script>
+<script>(function(){try{var ul=document.getElementById('today5'),nx=document.getElementById('nxt');if(!ul)return;/* 10/20부터 하루 4편(17:45 칸 없음, 사용자 결정 10/19) */if(new Date(Date.now()+9*3600e3).toISOString().slice(0,10)>='2026-10-20'){var l17=ul.querySelector('[data-t="17:45"]');if(l17){l17.remove();ul.classList.add('t4')}}function tick(){var d=new Date(Date.now()+9*3600e3),m=d.getUTCHours()*60+d.getUTCMinutes(),next=null;[].forEach.call(ul.children,function(li){var p=li.getAttribute('data-t').split(':'),t=+p[0]*60+ +p[1];li.classList.remove('nx');li.classList.toggle('done',t<=m);if(t>m&&!next)next={li:li,t:t}});if(next){next.li.classList.add('nx');var r=next.t-m,h=Math.floor(r/60),mm=r%60;nx.textContent='▶ 다음 영상 '+next.li.getAttribute('data-t')+' · '+(h?h+'시간 ':'')+mm+'분 남았어요'}else{nx.textContent='▶ 오늘 영상은 다 올라왔어요! 내일 아침 7:45에 만나요'}nx.hidden=false}tick();setInterval(tick,30000);fetch('hints.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){var d=new Date(Date.now()+9*3600e3).toISOString().slice(0,10),h=j&&j[d];if(!h)return;[].forEach.call(ul.children,function(li){var v=h[li.getAttribute('data-t')],e=li.querySelector('.hint');if(v&&e&&!e.classList.contains('rv')){e.textContent=v;e.hidden=false}})}).catch(function(){});/* 10/19 사용자 결정: 이미 올라온 칸은 직업 이름 공개 (names.json = 이름을 뒤집어 base64) */var NM=null;function dec(s){try{var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return Array.from(new TextDecoder().decode(u)).reverse().join('')}catch(e){return ''}}function rv(){if(!NM)return;var d=new Date(Date.now()+9*3600e3),k=d.toISOString().slice(0,10),m=d.getUTCHours()*60+d.getUTCMinutes(),h=NM[k]||{};[].forEach.call(ul.children,function(li){var tt=li.getAttribute('data-t'),p=tt.split(':'),t=+p[0]*60+ +p[1],e=li.querySelector('.hint');if(e&&h[tt]&&t<=m){var n=dec(h[tt]);if(n){e.textContent=n;e.hidden=false;e.classList.add('rv')}}})}fetch('names.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){NM=j;rv();setInterval(rv,30000)}).catch(function(){})}catch(e){}})();</script><script id="top3Slot">/* 10/23 사용자 결정: 07:45·11:45·19:30 = 어젯밤 확정 TOP3 이름 공개(신청 1~3위), 21:45는 '???'(공개 뒤에만 이름), 풀버전은 hints.json 그날 "20:00" 힌트만 */(function(){try{var ul=document.getElementById('today5');if(!ul)return;var S=['07:45','11:45','19:30'],TP=null,LG=null,lg=document.querySelector('.lgline'),lg0=lg?lg.innerHTML:'';function kst(){return new Date(Date.now()+9*3600e3)}function day(o){return new Date(Date.now()+9*3600e3+o*864e5).toISOString().slice(0,10)}function ap(){var d=kst(),m=d.getUTCHours()*60+d.getUTCMinutes();[].forEach.call(ul.children,function(li){var tt=li.getAttribute('data-t'),e=li.querySelector('.hint'),sp=li.querySelector('span');if(!e)return;var p=tt.split(':'),t=+p[0]*60+ +p[1],i=S.indexOf(tt);if(i>=0&&TP&&TP[i]){if(!(e.classList.contains('rv')&&!e.classList.contains('tp')&&t<=m)){e.textContent=TP[i];e.hidden=false;e.classList.add('rv','tp')}if(sp)sp.textContent='신청 '+(i+1)+'위'}else if(tt==='21:45'&&t>m){e.textContent='???';e.hidden=false;e.classList.add('rv','tp')}else if(e.classList.contains('tp')&&t<=m&&i<0){e.classList.remove('rv','tp')}});if(lg){if(LG&&m<20*60){lg.innerHTML='🎬 오늘 저녁 <b>8:00</b> 유튜브 풀버전 「<b>'+LG.replace(/[<>&]/g,'')+'</b>」'}else if(lg.innerHTML!==lg0&&LG){lg.innerHTML=lg0}}}fetch('confirmed.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){if(j&&j.date===day(-1)&&j.jobs&&j.jobs.length)TP=j.jobs.slice(0,3);ap()}).catch(function(){});fetch('hints.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){var h=j&&j[day(0)];if(h&&h['20:00'])LG=h['20:00'];ap()}).catch(function(){});ap();setTimeout(ap,1500);setTimeout(ap,4000);setInterval(ap,30000)}catch(e){}})();</script>
 <!--APP> 10/21 앱 화면(아래 탭 바·내 기록·홈 화면 추가 안내). 지울 때는 이 블록만 -->
 <style>
 .abar,.btab,.instb,.mebox{display:none}
@@ -1208,4 +1208,104 @@ setInterval(scan,1500);
 })();
 </script>
 <!--<NEWUI-->
+<!--FIX1023> 10/23 사용자 결정(디자인 다듬기 묶음). 되돌릴 땐 이 블록만 지우면 됨 -->
+<style id="fix1023">
+/* 숫자·문구 */
+.fx-hide{display:none!important}
+/* 배너 안 탭: 휴대폰에서 잘리지 않게 두 줄 */
+@media (max-width:420px){.nlg .tabs{flex-wrap:wrap!important;overflow:visible!important;gap:6px!important}.nlg .tabs .tab{flex:0 0 auto!important}}
+/* 배너 아래 '신청 순위 보기' */
+.fxdown{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px auto 0;padding:8px 16px;width:max-content;border-radius:999px;font:700 13px var(--f-body,Pretendard,sans-serif);color:var(--muted,#5b6b7c);background:transparent;border:0;cursor:pointer;animation:fxbob 2.4s cubic-bezier(0.65,0,0.35,1) infinite}
+@keyframes fxbob{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){.fxdown{animation:none}}
+/* 머리말: 휴대폰에서 인스타·틱톡은 아래로, 유튜브는 '구독' 알약 */
+@media (max-width:420px){.ntop .act .nsns{display:none!important}.ntop .act .nyt{width:auto!important;padding:0 12px!important;gap:4px;display:inline-flex!important;align-items:center;border-radius:999px!important}.ntop .act .nyt .fxsub{font:800 13px var(--f-body,Pretendard,sans-serif);color:#fff}}
+@media (min-width:421px){.ntop .act .nyt .fxsub{display:none}}
+/* 위 메뉴: 도구함은 '내 기록' 안에 있으니 뺌 */
+.nav [data-t="tools"]{display:none!important}
+/* 사연 탭 */
+.stbar .seg{border:0!important;box-shadow:none!important;outline:0!important;background:transparent!important;padding:0!important}
+.bh .bc.fx0{display:none!important}
+.nhead[data-k="story"] .gbtn[data-go="sw"]{display:none!important}
+.swd>summary{display:flex!important;align-items:center;justify-content:center;gap:6px;min-height:48px;border-radius:999px;background:var(--accent,#1B7FC4);color:#fff!important;font-weight:800;cursor:pointer;list-style:none}
+.swd>summary::-webkit-details-marker{display:none}
+.swd>summary small{color:rgba(255,255,255,.85)!important}
+.fxsafe{margin:4px 0 10px;padding:10px 12px;border-radius:12px;background:rgba(27,127,196,.08);font:600 13px/1.5 var(--f-body,Pretendard,sans-serif);color:var(--text,#16202b)}
+/* 도감: 썸네일 없는 칸 */
+.pc .im .fxph{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font:800 22px/1.15 var(--f-body,Pretendard,sans-serif);color:#fff;text-align:center;padding:8px;box-sizing:border-box;letter-spacing:-.02em}
+.pc .im img.fxyt{width:100%;height:100%;object-fit:cover;display:block}
+/* 도감: 풀버전 두 칸 */
+@media (max-width:620px){ul.long{display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important}ul.long li{margin:0!important;padding:8px!important}ul.long h3{font-size:14px!important;line-height:1.35!important;margin:6px 0 4px!important}ul.long li>a:not(.lt){font-size:12px!important}}
+/* 테스트 시작 안내 */
+.fxtinfo{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.fxtinfo span{padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);font:700 12px var(--f-body,Pretendard,sans-serif);color:#fff}
+/* 도구함: 영상 보기 */
+.tl .fxvid{display:inline-block;margin-top:6px;font:700 12px var(--f-body,Pretendard,sans-serif);color:var(--muted,#5b6b7c);text-decoration:none}
+/* 신청 순위 TOP3 강조 */
+.rq.fxtop{box-shadow:inset 0 0 0 2px var(--accent,#1B7FC4)!important}
+.rq.fxtop .rk{font-size:20px!important;color:var(--accent,#1B7FC4)!important}
+.rq .fxcut{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(27,127,196,.12);color:var(--accent,#1B7FC4);font:700 11px var(--f-body,Pretendard,sans-serif);vertical-align:middle}
+/* 구독 안내 */
+.fxsubt{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));z-index:9999;width:min(92vw,380px);transform:translate(-50%,24px);opacity:0;padding:14px 14px 12px;border-radius:18px;background:var(--card,#fff);color:var(--text,#16202b);box-shadow:0 10px 30px rgba(0,0,0,.18),inset 0 0 0 1px rgba(0,0,0,.06);font:600 14px/1.45 var(--f-body,Pretendard,sans-serif);transition:transform .45s cubic-bezier(0,0,0,1),opacity .45s cubic-bezier(0,0,0,1)}
+.fxsubt.on{transform:translate(-50%,0);opacity:1}
+.fxsubt.off{transform:translate(-50%,24px);opacity:0;transition:transform .3s cubic-bezier(0.55,0,0.9,0.45),opacity .3s cubic-bezier(0.55,0,0.9,0.45)}
+.fxsubt b{display:block;font-size:15px;margin-bottom:2px}
+.fxsubt .r{display:flex;gap:8px;margin-top:10px}
+.fxsubt a{flex:1;display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:999px;background:#FF0033;color:#fff;font-weight:800;text-decoration:none}
+.fxsubt button{min-height:44px;padding:0 16px;border-radius:999px;border:0;background:rgba(0,0,0,.06);color:inherit;font:700 14px var(--f-body,Pretendard,sans-serif);cursor:pointer}
+/* 하단 안내 */
+.fxfoot{margin-top:10px;font-size:12px;line-height:1.6;opacity:.85}
+.fxfoot a{color:inherit;font-weight:700}
+</style>
+<script id="fix1023js">(function(){try{
+var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+function kst(){return new Date(Date.now()+9*3600e3)}function day(o){return new Date(Date.now()+9*3600e3+(o||0)*864e5).toISOString().slice(0,10)}
+var TOP=null;fetch('confirmed.json?'+Date.now()).then(function(r){return r.json()}).then(function(j){if(j&&j.date===day(-1)&&j.jobs)TOP=j.jobs.slice(0,3);run()}).catch(function(){});
+var YT={'동물 박제사':'27zaRtGrIr4','미용사':'H3eJLuCtjSc','스포츠 물리치료사':'9P0lF7JM6iU','국가정보원 요원':'SfcXQjeqrVw','철도 토목직':'3CGb7px_2Pw','중학생':'RmOuJBUOf5Y'};
+var CC={'안전·공공':'#2F6FB0','의료·돌봄':'#D0566B','현장·기술':'#C9822B','자연·동물':'#3E9A63','생활·문화':'#7A5BC7'};
+function cm(e){if(!e)return;var t=e.textContent.replace(/,/g,'');if(/^\d{4,}$/.test(t))e.textContent=(+t).toLocaleString('ko-KR')}
+function fix(){
+ /* 숫자 쉼표 + '참여' 문구를 실제 뜻(누적 신청·♥ 수)으로 */
+ ['st2','st3','nst2','nst3','ab2','ab3'].forEach(function(id){cm(document.getElementById(id))});
+ ['st3','nst3'].forEach(function(id){var b=document.getElementById(id);if(b&&b.parentNode&&b.nextSibling&&b.nextSibling.nodeType===3&&/명 참여/.test(b.nextSibling.nodeValue))b.nextSibling.nodeValue='건 누적 신청'});
+ var a3=document.getElementById('ab3');if(a3&&a3.nextElementSibling&&a3.nextElementSibling.textContent==='참여한 사람')a3.nextElementSibling.textContent='누적 신청·♥';
+ /* 오늘 신청 0이면 숨기고, 있으면 '오늘 참여' */
+ ['st1','nst1','ab1'].forEach(function(id){var b=document.getElementById(id);if(!b)return;var w=b.parentNode,n=+b.textContent.replace(/,/g,'')||0;w.classList.toggle('fx-hide',n===0);var sm=w.querySelector('small');if(sm&&!sm.dataset.fx){sm.dataset.fx=1;sm.textContent='오늘 참여'}else if(!sm){[].forEach.call(w.childNodes,function(c){if(c.nodeType===3&&/오늘 신청/.test(c.nodeValue)){c.nodeValue=' 오늘 참여';var i=c.nextSibling;if(i&&i.tagName==='I')i.remove()}})}});
+ /* 배너 머리 글자 */
+ $$('.nlg .ed span').forEach(function(s){if(s.textContent==='JOB ENCYCLOPEDIA'){var n=$('#gh .n');s.textContent='직업도감'+(n?' · '+n.textContent+'편 공개':'')}});
+ /* '오늘은 ○○의 하루' = 오늘 공개됐거나 다음에 공개될 신청 TOP3 */
+ if(TOP){var j=$('.nlg .h .job');if(j){var d=kst(),m=d.getUTCHours()*60+d.getUTCMinutes(),S=[465,705,1170],pick=TOP[0];S.forEach(function(t,i){if(t<=m&&TOP[i])pick=TOP[i]});if(j.textContent!==pick)j.textContent=pick}}
+ /* 입력창 안내 짧게 */
+ var ri=$('.nlg input[type=search],.nlg input[type=text]');if(ri&&ri.placeholder==='예: 화이트해커')ri.placeholder='보고 싶은 직업 (예: 화이트해커)';
+ var rp=$('#res > p');if(rp&&/^직업 이름을 적으면/.test(rp.textContent))rp.textContent='적으면 이미 나왔는지, 몇 명이 신청했는지 알려 드려요.';
+ /* 배너 아래 '신청 순위 보기' */
+ var hero=document.getElementById('nhero');if(hero&&!$('.fxdown')){var rh=$$('#p-req h2').filter(function(h){return /신청 순위/.test(h.textContent)})[0];if(rh){var bd=document.createElement('button');bd.type='button';bd.className='fxdown';bd.textContent='신청 순위 보기 ↓';bd.onclick=function(){rh.scrollIntoView({behavior:'smooth',block:'start'})};hero.parentNode.insertBefore(bd,hero.nextSibling)}}
+ /* 유튜브 버튼 = 구독 */
+ var yt=$('.ntop .nyt');if(yt&&!yt.dataset.fx){yt.dataset.fx=1;yt.href='https://www.youtube.com/@jobdogam?sub_confirmation=1';yt.setAttribute('aria-label','유튜브 구독');var sp=document.createElement('span');sp.className='fxsub';sp.textContent='구독';yt.appendChild(sp)}
+ /* 사연: 💬0 숨김, 안전 안내 */
+ $$('.bh .bc').forEach(function(c){c.classList.toggle('fx0',/💬\s*0$/.test(c.textContent.trim()))});
+ var stf=document.getElementById('stf');if(stf&&!$('.fxsafe',stf)){var ta=stf.querySelector('textarea');var lb=ta&&ta.closest('label');if(lb){var ps=document.createElement('p');ps.className='fxsafe';ps.textContent='실명, 학교, 연락처, 사는 곳은 쓰지 마세요. 닉네임만으로 충분해요.';lb.parentNode.insertBefore(ps,lb)}
+  stf.addEventListener('submit',function(ev){var t=(stf.querySelector('textarea')||{}).value||'',nk=(stf.querySelector('[name=nick]')||{}).value||'';var bad=/(01[016789][\s.\-]?\d{3,4}[\s.\-]?\d{4})|([\w.+\-]+@[\w\-]+\.[\w.]+)/.test(t+' '+nk);if(bad){ev.preventDefault();ev.stopImmediatePropagation();var er=document.getElementById('sterr');if(er){er.textContent='전화번호나 이메일은 지우고 보내 주세요.';er.hidden=false}}},true)}
+ /* 도감: 썸네일 없는 칸 */
+ $$('#pgrid li').forEach(function(li){var ph=li.querySelector('.im .ph');if(!ph)return;var im=ph.parentNode,nm=(li.querySelector('.nm')||{}).textContent||'',id=YT[nm.trim()];if(id){var g=document.createElement('img');g.className='fxyt';g.alt='';g.loading='lazy';g.src='https://i.ytimg.com/vi/'+id+'/oar2.jpg';g.onerror=function(){if(this.dataset.f){var p=document.createElement('span');p.className='fxph';p.style.background=CC[li.dataset.cat]||'#4C6A8A';p.textContent=nm;this.replaceWith(p);return}this.dataset.f=1;this.src='https://i.ytimg.com/vi/'+id+'/hqdefault.jpg'};im.replaceChild(g,ph)}else{var p=document.createElement('span');p.className='fxph';p.style.background=CC[li.dataset.cat]||'#4C6A8A';p.textContent=nm;im.replaceChild(p,ph)}});
+ /* 테스트 시작 안내 */
+ var tg=$('.nhead[data-k="test"] .gbtn');if(tg&&!$('.fxtinfo')){var ti=document.createElement('div');ti.className='fxtinfo';ti.innerHTML='<span>질문 20개</span><span>약 3분</span><span>결과 카드 공유</span>';tg.parentNode.insertBefore(ti,tg)}
+ /* 도구함: 영상 보기 */
+ var R={};$$('#pgrid li').forEach(function(li){var n=(li.querySelector('.nm')||{}).textContent,a=li.querySelector('a.pc');if(n&&a)R[n.trim()]=a.href});
+ $$('ul.tools li.tl').forEach(function(li){if(li.querySelector('.fxvid'))return;var j=(li.querySelector('.tj')||{}).textContent,h=j&&R[j.trim()];if(h){var a=document.createElement('a');a.className='fxvid';a.href=h;a.target='_blank';a.rel='noopener';a.textContent='이 영상 보기 ▶';li.appendChild(a)}});
+ /* 신청 순위 TOP3 강조 + 3위까지 남은 수 */
+ var rows=$$('#p-req li.rq').filter(function(r){return r.offsetParent!==null});if(rows.length&&rows[0].querySelector('.rk')&&rows[0].querySelector('.rk').textContent.trim()==='1'){var c3=null;rows.forEach(function(r,i){r.classList.toggle('fxtop',i<3);var b=r.querySelector('.cnt .n b'),v=b?+b.textContent.replace(/,/g,''):0;if(i===2)c3=v;var old=r.querySelector('.fxcut');if(i===3&&c3!==null){var need=c3-v+1,txt='TOP3까지 '+need+'명';if(need>0){if(!old){old=document.createElement('span');old.className='fxcut';var nm=r.querySelector('.nm');var tr=nm&&nm.querySelector('.trk');if(nm)nm.insertBefore(old,tr||null)}if(old.textContent!==txt)old.textContent=txt}}else if(old)old.remove()})}
+ /* 하단 안내 */
+ $$('footer').forEach(function(f){if(f.querySelector('.fxfoot'))return;var d=document.createElement('div');d.className='fxfoot';d.innerHTML='모으는 정보: 닉네임, 신청한 직업, 사연(이 기기 신청 기록은 이 브라우저에만 저장) · 영상 선정과 화면 표시에만 써요 · 지우고 싶으면 인스타그램 <a href="https://www.instagram.com/jobdogam/" target="_blank" rel="noopener">@jobdogam</a> DM으로 알려 주세요<br><a href="https://www.instagram.com/jobdogam/" target="_blank" rel="noopener">인스타그램</a> · <a href="https://www.tiktok.com/@jobdogam.kr" target="_blank" rel="noopener">틱톡</a> · <a href="https://www.youtube.com/@jobdogam?sub_confirmation=1" target="_blank" rel="noopener">유튜브 구독</a>';f.appendChild(d)});
+}
+/* 신청·♥·사연 직후 구독 안내(하루 1번) */
+function ask(lb){try{var k='jd:subAsk',t=day(0);if(localStorage.getItem(k)===t)return;localStorage.setItem(k,t)}catch(e){}
+ setTimeout(function(){if($('.fxsubt'))return;var d=document.createElement('div');d.className='fxsubt';d.setAttribute('role','dialog');d.innerHTML='<b>'+(lb||'신청 완료!')+'</b>영상이 나오면 제일 먼저 보려면 유튜브 구독하고 알림을 켜 주세요.<div class="r"><a href="https://www.youtube.com/@jobdogam?sub_confirmation=1" target="_blank" rel="noopener">유튜브 구독</a><button type="button">다음에</button></div>';document.body.appendChild(d);requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.add('on')})});function close(){d.classList.add('off');setTimeout(function(){d.remove()},320)}d.querySelector('button').onclick=close;d.querySelector('a').addEventListener('click',function(){setTimeout(close,300)});setTimeout(close,12000)},900)}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.hb,[data-like]');if(b)ask('좋아요 반영!');var s=e.target.closest&&e.target.closest('#res button,#res .btn');if(s&&/신청/.test(s.textContent))ask('신청 완료!')},true);
+document.addEventListener('submit',function(e){if(e.target&&e.target.id==='stf'&&!e.defaultPrevented)ask('사연 도착!')});
+var q=0;function run(){if(q)return;q=1;setTimeout(function(){q=0;try{fix()}catch(e){}},250)}
+run();window.addEventListener('load',run);setTimeout(run,1500);setTimeout(run,4000);setInterval(run,30000);
+try{new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var t=ms[i].target;if(t.nodeType!==1)t=t.parentElement;if(!t||/^(cd|abcd|nxt)$/.test(t.id)||(t.closest&&t.closest('.fxsubt,#cd,#abcd,#nxt,.cdx')))continue;run();return}}).observe(document.body,{childList:true,subtree:true,characterData:true})}catch(e){}
+}catch(e){}})();</script>
+<!--<FIX1023-->
 </body></html>
