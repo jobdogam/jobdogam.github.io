@@ -1369,6 +1369,10 @@ try{new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var t=ms[i].t
 .mebtn{display:flex!important;align-items:center;justify-content:center;gap:6px;min-height:44px;border-radius:999px!important;background:linear-gradient(180deg,#FF3355,#E60026)!important;color:#fff!important;font:800 14px Pretendard,var(--f-body,sans-serif)!important;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.35)!important;border:0!important}
 .mebtn:not([href]){background:rgba(27,127,196,.10)!important;color:var(--muted,#5b6b7c)!important;box-shadow:inset 0 0 0 1px rgba(27,127,196,.18)!important;font-weight:700!important}
 .pcw .pt{margin-top:6px!important;min-height:32px;border-radius:999px!important;font:700 12px Pretendard,var(--f-body,sans-serif)!important}
+#nhero>.sp{pointer-events:none}
+.nbelt img{cursor:pointer;transition:filter .2s cubic-bezier(0.65,0,0.35,1)}
+.nbelt img:hover{filter:brightness(1.08)}
+.nbelt img.fxtap{filter:brightness(1.25) drop-shadow(0 0 10px rgba(255,224,138,.8))}
 @media (max-width:420px){.ytp{padding:12px}.ytp .bx{padding:10px;border-radius:26px}.ytp .bt a{font-size:13px;padding:0 10px}}
 /* 쇼츠 칸 '풀버전' 유리 딱지 */
 .pc .im{position:relative}
@@ -1470,6 +1474,15 @@ function deco(){LG=longs();queue();
 document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.nav button,[data-t],.rjobs,#qstart,.opt'))setTimeout(deco,60)});
 try{new MutationObserver(function(){paintTest()}).observe(document.getElementById('quiz')||document.body,{childList:true,subtree:true})}catch(e){}
 deco();window.addEventListener('load',deco);setTimeout(deco,1500);setTimeout(deco,4000);setInterval(deco,20000);
+
+/* 배너 떠다니는 카드: 톡 누르면 그 편 재생 (도감이 잡기·끌기와 구분) */
+(function(){var hero=document.getElementById('nhero');if(!hero)return;var dn=null,grab=false;
+ hero.addEventListener('pointerdown',function(e){dn={x:e.clientX,y:e.clientY,t:Date.now()};grab=false},true);
+ hero.addEventListener('pointerdown',function(e){try{if(hero.hasPointerCapture&&hero.hasPointerCapture(e.pointerId))grab=true}catch(_){}});
+ var SM={};function scan(){$$('#pgrid li.pcw').forEach(function(li){var im=li.querySelector('a.pc .im img:not(.fxyt)');if(im&&im.getAttribute('src'))SM[im.getAttribute('src').split('/').pop()]=li})}scan();setInterval(scan,5000);
+ function info(img){var li=SM[(img.getAttribute('src')||'').split('/').pop()];return li?cardInfo(li):null}
+ hero.addEventListener('click',function(e){var img=e.target.closest&&e.target.closest('.nbelt img');if(!img||grab||!dn)return;if(Math.abs(e.clientX-dn.x)>8||Math.abs(e.clientY-dn.y)>8||Date.now()-dn.t>500)return;var o=info(img);if(!o||!o.id)return;e.preventDefault();e.stopImmediatePropagation();img.classList.add('fxtap');setTimeout(function(){img.classList.remove('fxtap')},400);open({kind:'short',id:o.id,name:o.name})},true);
+ var h=hero.querySelector('.hint');if(h&&/도감이를 잡아서/.test(h.textContent))h.textContent='카드를 톡 하면 영상 재생 · 도감이는 잡아서 던져 보세요';})();
 /* 공유 링크로 들어오면 바로 재생 (?v=ID&k=s) */
 (function(){var m=location.search.match(/[?&]v=([\w-]{11})/);if(!m)return;var sh=/[?&]k=s/.test(location.search);setTimeout(function(){deco();var L=null;for(var k in LG)if(LG[k].id===m[1])L=LG[k];open(sh?{kind:'short',id:m[1],name:(QM[m[1]]||{}).name||'직업도감'}:{kind:'long',id:m[1],name:L?L.nm:'',title:L?L.nm+jo(L.nm)+' 되기까지':'직업도감 풀버전'})},900)})();
 }catch(e){}})();</script>
