@@ -1308,4 +1308,83 @@ run();window.addEventListener('load',run);setTimeout(run,1500);setTimeout(run,40
 try{new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var t=ms[i].target;if(t.nodeType!==1)t=t.parentElement;if(!t||/^(cd|abcd|nxt)$/.test(t.id)||(t.closest&&t.closest('.fxsubt,#cd,#abcd,#nxt,.cdx')))continue;run();return}}).observe(document.body,{childList:true,subtree:true,characterData:true})}catch(e){}
 }catch(e){}})();</script>
 <!--<FIX1023-->
+<!--YT1023> 10/23 사용자 결정: 사이트 안에서 유튜브 재생 + 쇼츠 칸 '풀버전' 버튼. 되돌릴 땐 이 블록만 지우면 됨 -->
+<style id="yt1023">
+.ytp{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,14,26,0);transition:background .4s cubic-bezier(0,0,0,1)}
+.ytp.on{background:rgba(8,14,26,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.ytp.off{background:rgba(8,14,26,0);transition:background .28s cubic-bezier(0.55,0,0.9,0.45)}
+.ytp .bx{position:relative;display:flex;flex-direction:column;gap:10px;width:var(--w);max-width:100%;transform:translateY(28px) scale(.97);opacity:0;transition:transform .45s cubic-bezier(0,0,0,1),opacity .45s cubic-bezier(0,0,0,1)}
+.ytp.on .bx{transform:none;opacity:1}
+.ytp.off .bx{transform:translateY(28px) scale(.97);opacity:0;transition:transform .28s cubic-bezier(0.55,0,0.9,0.45),opacity .28s cubic-bezier(0.55,0,0.9,0.45)}
+.ytp .fr{position:relative;width:100%;aspect-ratio:var(--ar);border-radius:18px;overflow:hidden;background:#000;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.ytp iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ytp .hd{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#fff;font:800 16px/1.3 Pretendard,var(--f-body,sans-serif)}
+.ytp .hd small{display:block;font-weight:600;font-size:12px;opacity:.75}
+.ytp .x{flex:0 0 auto;width:44px;height:44px;border-radius:999px;border:0;background:rgba(255,255,255,.16);color:#fff;font:700 22px/1 Pretendard,sans-serif;cursor:pointer}
+.ytp .bt{display:flex;gap:8px}
+.ytp .bt a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 10px;border-radius:999px;font:800 14px Pretendard,var(--f-body,sans-serif);text-decoration:none;text-align:center;line-height:1.2}
+.ytp .bt .lg{background:#FFE08A;color:#16202b}
+.ytp .bt .sb{background:#FF0033;color:#fff}
+.ytp .bt .ot{background:rgba(255,255,255,.16);color:#fff}
+.pcw .fxlong{display:flex;align-items:center;justify-content:center;gap:4px;min-height:36px;margin-top:6px;border-radius:999px;background:#FF0033;color:#fff!important;font:800 12px Pretendard,var(--f-body,sans-serif);text-decoration:none}
+.today li.fxplay{cursor:pointer}
+.today li .fxpl{display:block;margin-top:4px;font:800 11px Pretendard,var(--f-body,sans-serif);color:#fff;opacity:.9}
+@media (prefers-reduced-motion:reduce){.ytp,.ytp .bx{transition:none!important}}
+</style>
+<script id="yt1023js">(function(){try{
+var $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
+var IG=/Instagram|FBAN|FBAV|FB_IAB/i.test(navigator.userAgent||'');
+var SUB='https://www.youtube.com/@jobdogam?sub_confirmation=1';
+/* 유튜브 ID가 표(D.ytr)에 아직 없는 최근 편 (업로드기록 기준) */
+var YT2={'동물 박제사':'27zaRtGrIr4','요리사':'9P__6P05H08','미용사':'H3eJLuCtjSc','중학생':'RmOuJBUOf5Y','스포츠 물리치료사':'9P0lF7JM6iU','국가정보원 요원':'SfcXQjeqrVw','철도 토목직':'3CGb7px_2Pw','뮤지컬 배우':'ttDngSFMnPo'};
+/* 쇼츠 이름과 풀버전 이름이 다른 경우 */
+var AL={'지구대 경찰':'경찰관','응급실 간호사 인기':'응급실 간호사'};
+function jo(s){var c=(s||'').charCodeAt((s||'').length-1);return (c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28)?'이':'가'}
+function nz(s){return (s||'').replace(/\s+/g,'').replace(/인기$/,'')}
+function ytr(){try{return (typeof D!=='undefined'&&D&&D.ytr)||{}}catch(e){return {}}}
+function idOf(u){var m=(u||'').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([\w-]{11})/);return m?m[1]:null}
+/* 풀버전 표: 직업 이름 → 영상 ID */
+function longs(){var L={};var src=[];try{if(typeof D!=='undefined'&&D.longDone)src=D.longDone.slice()}catch(e){}
+ $$('a[href*="youtu.be/"],a[href*="youtube.com/watch"]').forEach(function(a){var t=(a.querySelector('b,h3')||a.closest('li')&&a.closest('li').querySelector('h3')||{}).textContent;if(t)src.push([t,a.href])});
+ src.forEach(function(r){var m=(r[0]||'').match(/^(.+?)(?:이|가)?\s*되기까지/),id=idOf(r[1]);if(m&&id){L[nz(m[1])]={id:id,nm:m[1].trim()}}});return L}
+var LG={};
+function longFor(name){var n=nz(AL[(name||'').trim()]||name);return LG[n]||null}
+/* 쇼츠 칸 정보 */
+function cardInfo(li){var a=li.querySelector('a.pc');if(!a)return null;var nm=((li.querySelector('.nm')||{}).textContent||'').trim(),sc=li.dataset.sc||((a.getAttribute('href')||'').match(/reel\/([\w-]+)/)||[])[1];var id=ytr()[sc]||YT2[nm]||idOf(a.href);return {name:nm.replace(/\s*인기$/,''),id:id,reel:sc?'https://www.instagram.com/reel/'+sc+'/':null}}
+/* 플레이어 */
+var cur=null;
+function open(o){close(true);var sh=o.kind==='short';var d=document.createElement('div');d.className='ytp';d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');
+ var vw=Math.min(window.innerWidth-32,sh?((window.innerHeight-200)*9/16):760);d.style.setProperty('--w',Math.max(240,vw)+'px');d.style.setProperty('--ar',sh?'9/16':'16/9');
+ var LO=sh?longFor(o.name):null,lg=LO&&LO.id;
+ var btn='';if(lg)btn+='<a class="lg" href="#" data-lg="'+lg+'" data-nm="'+esc(LO.nm)+'">풀버전 「'+esc(LO.nm)+jo(LO.nm)+' 되기까지」</a>';
+ btn+='<a class="sb" href="'+SUB+'" target="_blank" rel="noopener">유튜브 구독</a>';
+ if(!lg)btn+='<a class="ot" href="https://www.youtube.com/'+(sh?'shorts/':'watch?v=')+o.id+'" target="_blank" rel="noopener">유튜브에서 보기</a>';
+ d.innerHTML='<div class="bx"><div class="hd"><span>'+esc(o.title||o.name)+'<small>'+(sh?'쇼츠':'유튜브 풀버전')+'</small></span><button type="button" class="x" aria-label="닫기">×</button></div><div class="fr"><iframe src="https://www.youtube.com/embed/'+o.id+'?autoplay=1&playsinline=1&rel=0&modestbranding=1" title="'+esc(o.title||o.name)+'" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div><div class="bt">'+btn+'</div></div>';
+ document.body.appendChild(d);cur=d;var ov=document.documentElement.style.overflow;document.documentElement.style.overflow='hidden';d._ov=ov;
+ requestAnimationFrame(function(){requestAnimationFrame(function(){d.classList.add('on')})});
+ d.addEventListener('click',function(e){if(e.target===d||e.target.closest('.x')){e.preventDefault();close()}var l=e.target.closest('[data-lg]');if(l){e.preventDefault();open({kind:'long',id:l.dataset.lg,name:l.dataset.nm,title:l.dataset.nm+jo(l.dataset.nm)+' 되기까지'})}});
+ try{if(!(history.state&&history.state.ytp))history.pushState({ytp:1},'')}catch(e){}}
+function close(now,pop){var d=cur;if(!d)return;cur=null;if(!now&&!pop){try{if(history.state&&history.state.ytp)history.back()}catch(e){}}document.documentElement.style.overflow=d._ov||'';if(now){d.remove();return}d.classList.remove('on');d.classList.add('off');var f=d.querySelector('iframe');setTimeout(function(){if(f)f.src='about:blank';d.remove()},300)}
+function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')close()});
+window.addEventListener('popstate',function(){if(cur)close(false,true)});
+/* 누르면 사이트 안에서 재생 */
+document.addEventListener('click',function(e){if(e.defaultPrevented||e.button>0||e.metaKey||e.ctrlKey||e.shiftKey)return;var t=e.target;if(!t.closest||t.closest('.ytp'))return;
+ var fl=t.closest('.fxlong');if(fl){e.preventDefault();e.stopImmediatePropagation();open({kind:'long',id:fl.dataset.lg,name:fl.dataset.nm,title:fl.dataset.nm+jo(fl.dataset.nm)+' 되기까지'});return}
+ var pc=t.closest('#pgrid a.pc,.grid a.pc');if(pc){var li=pc.closest('li'),o=li&&cardInfo(li);if(o&&o.id){e.preventDefault();e.stopImmediatePropagation();open({kind:'short',id:o.id,name:o.name});return}return}
+ var a=t.closest('a[href]');if(!a)return;var h=a.getAttribute('href')||'';if(/sub_confirmation|\/@jobdogam|\/channel\//.test(h))return;
+ var id=idOf(h);if(!id)return;var b=a.querySelector('b,h3')||(a.closest('li')&&a.closest('li').querySelector('h3'));var tt=b?b.textContent.trim():'';var nm=(tt.match(/^(.+?)(?:이|가)?\s*되기까지/)||[])[1]||tt;
+ e.preventDefault();e.stopImmediatePropagation();open({kind:/\/shorts\//.test(h)?'short':'long',id:id,name:nm,title:tt.replace(/의 여정$/,'')})},true);
+/* 쇼츠 칸에 '풀버전' 버튼, 오늘 4칸 공개된 칸은 누르면 재생 */
+function deco(){LG=longs();
+ $$('#pgrid li.pcw').forEach(function(li){var o=cardInfo(li);if(!o)return;if(o.id){var g=li.querySelector('.go');if(g&&/릴스/.test(g.textContent))g.textContent=g.textContent.replace('릴스','쇼츠')}
+  var LO=longFor(o.name),lg=LO&&LO.id,ex=li.querySelector('.fxlong');if(lg&&!ex){var b=document.createElement('a');b.className='fxlong';b.href='https://youtu.be/'+lg;b.dataset.lg=lg;b.dataset.nm=LO.nm;b.textContent='▶ 풀버전 보기';var pc=li.querySelector('a.pc');pc.parentNode.insertBefore(b,pc.nextSibling)}});
+ var map={};$$('#pgrid li.pcw').forEach(function(li){var o=cardInfo(li);if(o&&o.id)map[nz(o.name)]=o});
+ $$('#today5 li').forEach(function(li){var e=li.querySelector('.hint');var n=e&&!e.hidden?e.textContent.trim():'';var o=map[nz(n)];var p=li.querySelector('.fxpl');
+  if(li.classList.contains('done')&&o){li.classList.add('fxplay');li.dataset.yid=o.id;li.dataset.ynm=o.name;if(!p){p=document.createElement('span');p.className='fxpl';p.textContent='▶ 바로 보기';li.appendChild(p)}}else{li.classList.remove('fxplay');if(p)p.remove()}});
+ $$('p.sub').forEach(function(s){if(s.textContent==='누르면 인스타그램 릴스로 가요.'||s.textContent==='누르면 유튜브 쇼츠로 가요.')s.textContent='누르면 바로 재생돼요.'})}
+document.addEventListener('click',function(e){var li=e.target.closest&&e.target.closest('#today5 li.fxplay');if(li){e.preventDefault();open({kind:'short',id:li.dataset.yid,name:li.dataset.ynm})}});
+deco();window.addEventListener('load',deco);setTimeout(deco,1500);setTimeout(deco,4000);setInterval(deco,20000);
+}catch(e){}})();</script>
+<!--<YT1023-->
 </body></html>
