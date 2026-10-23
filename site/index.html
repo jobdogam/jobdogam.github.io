@@ -1264,6 +1264,12 @@ var TOP=null;fetch('confirmed.json?'+Date.now()).then(function(r){return r.json(
 var YT={'동물 박제사':'27zaRtGrIr4','미용사':'H3eJLuCtjSc','스포츠 물리치료사':'9P0lF7JM6iU','국가정보원 요원':'SfcXQjeqrVw','철도 토목직':'3CGb7px_2Pw','중학생':'RmOuJBUOf5Y'};
 var CC={'안전·공공':'#2F6FB0','의료·돌봄':'#D0566B','현장·기술':'#C9822B','자연·동물':'#3E9A63','생활·문화':'#7A5BC7'};
 function cm(e){if(!e)return;var t=e.textContent.replace(/,/g,'');if(/^\d{4,}$/.test(t))e.textContent=(+t).toLocaleString('ko-KR')}
+var RJ=null,STILL=false;try{STILL=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+function jlist(){var d=kst(),m=d.getUTCHours()*60+d.getUTCMinutes(),a=[];if(TOP)[465,705,1170].forEach(function(t,i){if(t<=m&&TOP[i])a.unshift(TOP[i])});if(!a.length&&TOP&&TOP[0])a.push(TOP[0]);
+ try{(D.posted||[]).map(function(p){return p[0]}).filter(Boolean).slice(-8).reverse().forEach(function(n){if(a.indexOf(n)<0)a.push(n)})}catch(e){}return a}
+function rot(){var j=$('.nlg .h .job');if(!j||(RJ&&RJ.el===j))return;var c=j.cloneNode(true);c.classList.remove('out');j.parentNode.replaceChild(c,j);RJ={el:c,i:0};var L=jlist();if(L[0])c.textContent=L[0];
+ c.style.cursor='pointer';c.addEventListener('click',function(){var n=c.textContent.trim();var li=$$('#pgrid li.pcw').filter(function(x){var e=x.querySelector('.nm');return e&&e.textContent.trim().replace(/\s*인기$/,'')===n})[0];var a=li&&li.querySelector('a.pc');if(a)a.click()});
+ if(!STILL&&!RJ.t)RJ.t=setInterval(function(){var L=jlist();if(L.length<2)return;RJ.i=(RJ.i+1)%L.length;var e=RJ.el;e.classList.add('out');setTimeout(function(){e.textContent=L[RJ.i];e.classList.remove('out')},250)},2800)}
 function fix(){
  /* 숫자 쉼표 + '참여' 문구를 실제 뜻(누적 신청·♥ 수)으로 */
  ['st2','st3','nst2','nst3','ab2','ab3'].forEach(function(id){cm(document.getElementById(id))});
@@ -1273,8 +1279,8 @@ function fix(){
  ['st1','nst1','ab1'].forEach(function(id){var b=document.getElementById(id);if(!b)return;var w=b.parentNode,n=+b.textContent.replace(/,/g,'')||0;w.classList.toggle('fx-hide',n===0);var sm=w.querySelector('small');if(sm&&!sm.dataset.fx){sm.dataset.fx=1;sm.textContent='오늘 참여'}else if(!sm){[].forEach.call(w.childNodes,function(c){if(c.nodeType===3&&/오늘 신청/.test(c.nodeValue)){c.nodeValue=' 오늘 참여';var i=c.nextSibling;if(i&&i.tagName==='I')i.remove()}})}});
  /* 배너 머리 글자 */
  $$('.nlg .ed span').forEach(function(s){if(s.textContent==='JOB ENCYCLOPEDIA'){var n=$('#gh .n');s.textContent='직업도감'+(n?' · '+n.textContent+'편 공개':'')}});
- /* '오늘은 ○○의 하루' = 오늘 공개됐거나 다음에 공개될 신청 TOP3 */
- if(TOP){var j=$('.nlg .h .job');if(j){var d=kst(),m=d.getUTCHours()*60+d.getUTCMinutes(),S=[465,705,1170],pick=TOP[0];S.forEach(function(t,i){if(t<=m&&TOP[i])pick=TOP[i]});if(j.textContent!==pick)j.textContent=pick}}
+ /* '오늘은 ○○의 하루' = 오늘 공개된 TOP3 + 최근 공개 편을 번갈아 보여 줌 */
+ rot();
  /* 입력창 안내 짧게 */
  var ri=$('.nlg input[type=search],.nlg input[type=text]');if(ri&&ri.placeholder==='예: 화이트해커')ri.placeholder='보고 싶은 직업 (예: 화이트해커)';
  var rp=$('#res > p');if(rp&&/^직업 이름을 적으면/.test(rp.textContent))rp.textContent='적으면 이미 나왔는지, 몇 명이 신청했는지 알려 드려요.';
