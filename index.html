@@ -1273,8 +1273,8 @@ function rot(){var j=$('.nlg .h .job');if(!j||(RJ&&RJ.el===j))return;var c=j.clo
 function fix(){
  /* 숫자 쉼표 + '참여' 문구를 실제 뜻(누적 신청·♥ 수)으로 */
  ['st2','st3','nst2','nst3','ab2','ab3'].forEach(function(id){cm(document.getElementById(id))});
- ['st3','nst3'].forEach(function(id){var b=document.getElementById(id);if(b&&b.parentNode&&b.nextSibling&&b.nextSibling.nodeType===3&&/명 참여/.test(b.nextSibling.nodeValue))b.nextSibling.nodeValue='건 누적 신청'});
- var a3=document.getElementById('ab3');if(a3&&a3.nextElementSibling&&a3.nextElementSibling.textContent==='참여한 사람')a3.nextElementSibling.textContent='누적 신청·♥';
+ ['st3','nst3'].forEach(function(id){var b=document.getElementById(id);if(b&&b.parentNode&&b.nextSibling&&b.nextSibling.nodeType===3&&/명 참여/.test(b.nextSibling.nodeValue))b.nextSibling.nodeValue='건 누적 참여'});
+ var a3=document.getElementById('ab3');if(a3&&a3.nextElementSibling&&a3.nextElementSibling.textContent==='참여한 사람')a3.nextElementSibling.textContent='누적 참여';
  /* 오늘 신청 0이면 숨기고, 있으면 '오늘 참여' */
  ['st1','nst1','ab1'].forEach(function(id){var b=document.getElementById(id);if(!b)return;var w=b.parentNode,n=+b.textContent.replace(/,/g,'')||0;w.classList.toggle('fx-hide',n===0);var sm=w.querySelector('small');if(sm&&!sm.dataset.fx){sm.dataset.fx=1;sm.textContent='오늘 참여'}else if(!sm){[].forEach.call(w.childNodes,function(c){if(c.nodeType===3&&/오늘 신청/.test(c.nodeValue)){c.nodeValue=' 오늘 참여';var i=c.nextSibling;if(i&&i.tagName==='I')i.remove()}})}});
  /* 배너 머리 글자 */
@@ -1302,7 +1302,7 @@ function fix(){
  /* 신청 순위 TOP3 강조 + 3위까지 남은 수 */
  var rows=$$('#p-req li.rq').filter(function(r){return r.offsetParent!==null});if(rows.length&&rows[0].querySelector('.rk')&&rows[0].querySelector('.rk').textContent.trim()==='1'){var c3=null;rows.forEach(function(r,i){r.classList.toggle('fxtop',i<3);var b=r.querySelector('.cnt .n b'),v=b?+b.textContent.replace(/,/g,''):0;if(i===2)c3=v;var old=r.querySelector('.fxcut');if(i===3&&c3!==null){var need=c3-v+1,txt='TOP3까지 '+need+'명';if(need>0){if(!old){old=document.createElement('span');old.className='fxcut';var nm=r.querySelector('.nm');var tr=nm&&nm.querySelector('.trk');if(nm)nm.insertBefore(old,tr||null)}if(old.textContent!==txt)old.textContent=txt}}else if(old)old.remove()})}
  /* 하단 안내 */
- $$('footer').forEach(function(f){if(f.querySelector('.fxfoot'))return;var d=document.createElement('div');d.className='fxfoot';d.innerHTML='모으는 정보: 닉네임, 신청한 직업, 사연(이 기기 신청 기록은 이 브라우저에만 저장) · 영상 선정과 화면 표시에만 써요 · 지우고 싶으면 인스타그램 <a href="https://www.instagram.com/jobdogam/" target="_blank" rel="noopener">@jobdogam</a> DM으로 알려 주세요<br><a href="https://www.instagram.com/jobdogam/" target="_blank" rel="noopener">인스타그램</a> · <a href="https://www.tiktok.com/@jobdogam.kr" target="_blank" rel="noopener">틱톡</a> · <a href="https://www.youtube.com/@jobdogam?sub_confirmation=1" target="_blank" rel="noopener">유튜브 구독</a>';f.appendChild(d)});
+ $$('footer').forEach(function(f){if(f.querySelector('.fxfoot'))return;var d=document.createElement('div');d.className='fxfoot';d.innerHTML='모으는 정보: 닉네임, 신청한 직업, 사연(이 기기 신청 기록은 이 브라우저에만 저장) · 영상 선정과 화면 표시에만 써요 · 지우고 싶으면 인스타그램 <a href="https://www.instagram.com/jobdogam/" target="_blank" rel="noopener">@jobdogam</a> DM으로 알려 주세요<br><a href="https://www.instagram.com/jobdogam/" target="_blank" rel="noopener">인스타그램</a> · <a href="https://www.tiktok.com/@jobdogam.kr" target="_blank" rel="noopener">틱톡</a> · <a href="https://www.youtube.com/@jobdogam?sub_confirmation=1" target="_blank" rel="noopener">유튜브 구독</a><br>비즈니스 문의 <a href="mailto:jobdogam@gmail.com">jobdogam@gmail.com</a>';f.appendChild(d)});
 }
 /* 신청·♥·사연 직후 구독 안내(하루 1번) */
 function ask(lb){try{var k='jd:subAsk',t=day(0);if(localStorage.getItem(k)===t)return;localStorage.setItem(k,t)}catch(e){}
