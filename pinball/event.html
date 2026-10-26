@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>랜덤 핀볼 참가 신청</title>
+<meta name="description" content="내 캐릭터를 직접 그리고 보고 싶은 직업을 신청하면 랜덤 핀볼로 다음 직업을 뽑아요">
+<style>
+@font-face{font-family:G9;src:url(Galmuri9.woff2)}
+@font-face{font-family:G11;src:url(Galmuri11-Bold.woff2)}
+@font-face{font-family:G14;src:url(Galmuri14.woff2)}
+:root{--bg:#0a0524;--ink:#FFF1E8;--sub:#C2C3C7;--yel:#FFEC27;--pk:#FF77A8;--cy:#3BF0FF;--gr:#00E436}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:G11,monospace}
+body{min-height:100vh;background:linear-gradient(#04020c,#2a0b4a 45%,#16224a);padding:16px 16px 40px}
+.wrap{max-width:440px;margin:0 auto}
+h1{font:28px G14,monospace;color:var(--yel);text-shadow:3px 3px 0 #7E2553;margin:8px 0 2px;text-align:center}
+.sub{font:12px/1.7 G9,monospace;color:var(--sub);text-align:center;margin:0 0 16px}
+.box{background:#1D2B53;padding:16px;margin-bottom:16px;box-shadow:0 0 0 3px #000,0 0 0 6px #FFF1E8,0 0 0 9px #000}
+.box h2{font:15px G11,monospace;margin:0 0 10px;color:var(--cy)}
+label{display:block;font:12px G9,monospace;color:var(--sub);margin:10px 0 6px}
+input[type=text]{width:100%;padding:12px;border:0;background:#000;color:var(--ink);font:16px G11,monospace;box-shadow:inset 0 0 0 3px #5F574F}
+input[type=text]:focus{outline:none;box-shadow:inset 0 0 0 3px var(--cy)}
+#grid{display:grid;grid-template-columns:repeat(12,1fr);width:100%;aspect-ratio:1;background:repeating-conic-gradient(#222 0 25%,#2c2c2c 0 50%) 0 0/16.66% 16.66%;touch-action:none;box-shadow:0 0 0 3px #000;user-select:none}
+#grid div{border:1px solid rgba(255,255,255,.05)}
+.pal{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin-top:12px}
+.pal button{aspect-ratio:1;border:0;cursor:pointer;box-shadow:inset 0 0 0 2px #000}
+.pal button.on{box-shadow:inset 0 0 0 3px #fff,0 0 0 2px #000}
+.pal .er{background:repeating-conic-gradient(#555 0 25%,#999 0 50%) 0 0/50% 50%}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{flex:1;min-width:90px;border:0;padding:12px 8px;font:13px G11,monospace;cursor:pointer;background:#C2C3C7;color:#000;box-shadow:inset -4px -4px 0 #5F574F,inset 4px 4px 0 #FFF1E8}
+.btn:active{box-shadow:inset 4px 4px 0 #5F574F,inset -4px -4px 0 #FFF1E8}
+.btn.go{background:var(--gr);box-shadow:inset -4px -4px 0 #008751,inset 4px 4px 0 #B6FFB0;font-size:16px;padding:16px}
+.btn.on{background:var(--yel)}
+#prev{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:12px}
+#prev canvas{image-rendering:pixelated;width:84px;height:84px;background:#000;box-shadow:0 0 0 3px #000}
+#prevName{font:13px G11,monospace;color:var(--yel)}
+#msg{font:13px/1.6 G11,monospace;color:var(--yel);min-height:20px;margin-top:10px;text-align:center}
+.note{font:11px/1.7 G9,monospace;color:var(--sub);margin:8px 0 0}
+#ticket{display:none;margin-top:14px;text-align:center}
+#ticket img{width:100%;max-width:280px;box-shadow:0 0 0 3px #000,0 0 0 6px #FFEC27;image-rendering:pixelated}
+a{color:var(--cy)}
+</style></head><body><div class="wrap">
+<h1>랜덤 핀볼</h1>
+<p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
+
+<div class="box">
+ <h2>1. 내 캐릭터 그리기</h2>
+ <div id="grid" aria-label="12칸 그림판"></div>
+ <div class="pal" id="pal"></div>
+ <div class="row"><button class="btn" id="mirror" type="button">좌우 대칭 끔</button><button class="btn" id="rand" type="button">랜덤 예시</button><button class="btn" id="clear" type="button">모두 지우기</button></div>
+ <div id="prev"><canvas id="pv" width="14" height="14"></canvas><div><div id="prevName">@아이디</div><div class="note">경기에선 이 크기로 굴러가요</div></div></div>
+</div>
+
+<div class="box">
+ <h2>2. 신청하기</h2>
+ <label for="id">인스타그램 아이디</label>
+ <input id="id" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@jobdogam" maxlength="31">
+ <label for="job">보고 싶은 직업</label>
+ <input id="job" type="text" autocomplete="off" placeholder="예) 피아니스트" maxlength="12">
+ <p class="note">아이디 하나당 한 캐릭터만 참가해요. 다시 보내면 마지막 신청으로 바뀌어요.</p>
+ <div class="row"><button class="btn go" id="send" type="button">참가 신청 ▶</button></div>
+ <div id="msg" role="status"></div>
+ <div id="ticket"><img id="tkImg" alt="내 참가 티켓"><div class="row"><button class="btn go" id="tkSave" type="button">참가 티켓 저장</button></div><p class="note">스토리에 올리고 #직업도감_핀볼 을 달아 주세요. 저장이 안 되면 그림을 길게 눌러 저장해요.</p></div>
+</div>
+<div class="box"><h2>안내</h2><p class="note">· 신청 때는 인스타그램 아이디와 직업만 받아요. 다른 개인정보는 받지 않아요.<br>· 경품이 있는 이벤트면 당첨자에게만 인스타그램 DM으로 연락해요. 만 14세 미만 당첨자는 보호자 동의를 받은 뒤 보내요.<br>· 경기 결과 영상에 아이디와 캐릭터가 나올 수 있어요.<br>· 이 이벤트는 인스타그램이 후원하거나 운영하지 않으며 인스타그램과 관련이 없어요.</p></div>
+<p class="note" style="text-align:center"><a href="https://jobdogam.github.io/">직업도감 홈</a></p>
+</div>
+<script>
+'use strict';
+const FORM='https://docs.google.com/forms/d/e/1FAIpQLScXDaWQa36Pu05vXpAfL49umSO0lU6X1TPI0sV7SP98v11_VQ/formResponse';
+const F_JOB='entry.158041880',F_NICK='entry.1484247861',F_KIND='entry.2061878460',KIND='핀볼이벤트',SEP='␟';
+const SPAL=[null,'#000000','#1D2B53','#7E2553','#008751','#AB5236','#5F574F','#C2C3C7','#FFF1E8','#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#83769C','#FF77A8','#FFCCAA'];
+const N=12;let px=new Array(N*N).fill(0),cur=9,mirror=false;
+const $=i=>document.getElementById(i);
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+// 팔레트
+const pal=$('pal');[0,...Array.from({length:16},(_,i)=>i+1)].forEach(v=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',v?'색 '+v:'지우개');if(v)b.style.background=SPAL[v];else b.className='er';b.onclick=()=>{cur=v;[...pal.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};if(v===9)b.classList.add('on');pal.appendChild(b)});
+// 그림판
+const grid=$('grid');for(let i=0;i<N*N;i++)grid.appendChild(document.createElement('div'));
+function paint(){[...grid.children].forEach((d,i)=>d.style.background=px[i]?SPAL[px[i]]:'transparent');
+ const c=$('pv').getContext('2d');c.clearRect(0,0,14,14);
+ for(const [ox,oy] of [[0,1],[2,1],[1,0],[1,2]])for(let i=0;i<144;i++)if(px[i]){c.fillStyle='#000';c.fillRect(i%12+ox,(i/12|0)+oy,1,1)}
+ for(let i=0;i<144;i++)if(px[i]){c.fillStyle=SPAL[px[i]];c.fillRect(i%12+1,(i/12|0)+1,1,1)}
+ LS.set('pinball_px',code())}
+function setAt(e){const r=grid.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*N),y=Math.floor((e.clientY-r.top)/r.height*N);if(x<0||y<0||x>=N||y>=N)return;px[y*N+x]=cur;if(mirror)px[y*N+(N-1-x)]=cur;paint()}
+let down=false;grid.addEventListener('pointerdown',e=>{down=true;grid.setPointerCapture(e.pointerId);setAt(e)});grid.addEventListener('pointermove',e=>{if(down)setAt(e)});grid.addEventListener('pointerup',()=>down=false);
+const code=()=>px.map(v=>v.toString(17)).join('');
+$('mirror').onclick=()=>{mirror=!mirror;$('mirror').textContent='좌우 대칭 '+(mirror?'켬':'끔');$('mirror').classList.toggle('on',mirror)};
+$('clear').onclick=()=>{px.fill(0);paint()};
+$('rand').onclick=()=>{px.fill(0);const body=[9,10,11,12,13,15,16,8,14][Math.random()*9|0],dark=[1,2,3,5][Math.random()*4|0];
+ for(let y=2;y<11;y++)for(let x=0;x<6;x++){const dx=5.5-x,dy=y-6.3;if(dx*dx/30+dy*dy/22<1){px[y*N+x]=body;px[y*N+11-x]=body}}
+ const ey=4+(Math.random()*2|0);px[ey*N+3]=8;px[ey*N+8]=8;px[(ey+1)*N+3]=1;px[(ey+1)*N+8]=1;
+ const m=Math.random()*3|0;if(m===0){px[8*N+5]=dark;px[8*N+6]=dark}else if(m===1){for(let x=4;x<8;x++)px[8*N+x]=dark}else{px[8*N+4]=dark;px[9*N+5]=dark;px[9*N+6]=dark;px[8*N+7]=dark}
+ const hat=Math.random()*4|0;if(hat===0){px[0*N+3]=body;px[1*N+3]=body;px[0*N+8]=body;px[1*N+8]=body}else if(hat===1){for(let x=2;x<10;x++)px[1*N+x]=9}else if(hat===2){px[0*N+6]=12;px[1*N+5]=12;px[1*N+6]=12}
+ px[7*N+2]=15;px[7*N+9]=15;paint()};
+const saved=LS.get('pinball_px');if(saved&&saved.length===144){px=[...saved].map(c=>parseInt(c,17)||0)}else $('rand').onclick();paint();
+$('id').value=LS.get('pinball_id')||'';$('job').value=LS.get('pinball_job')||'';
+const normId=v=>v.trim().replace(/^@+/,'').toLowerCase();
+$('id').addEventListener('input',()=>{const v=normId($('id').value);$('prevName').textContent=v?'@'+v:'@아이디'});$('id').dispatchEvent(new Event('input'));
+$('send').onclick=async()=>{const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
+ if(!/^[a-z0-9._]{1,30}$/.test(id)){msg('인스타그램 아이디를 확인해 주세요');$('id').focus();return}
+ if(job.length<2){msg('보고 싶은 직업을 적어 주세요');$('job').focus();return}
+ if(px.filter(v=>v).length<6){msg('캐릭터를 조금 더 그려 주세요');return}
+ const b=$('send');b.disabled=true;b.textContent='보내는 중…';
+ const body=new URLSearchParams();body.set(F_JOB,job);body.set(F_NICK,id+SEP+'p:'+code());body.set(F_KIND,KIND);
+ try{await fetch(FORM,{method:'POST',mode:'no-cors',body});LS.set('pinball_id',id);LS.set('pinball_job',job);msg(`@${id} 님 참가 완료! 핀볼 영상에서 내 캐릭터를 찾아보세요`);b.textContent='다시 보내기(수정)';makeTicket(id,job)}
+ catch(e){msg('보내지 못했어요. 잠시 뒤 다시 눌러 주세요');b.textContent='참가 신청 ▶'}
+ b.disabled=false};
+// 참가 티켓(1080x1920, 스토리 크기) — 내 캐릭터 크게 + @아이디 + #직업도감_핀볼
+let tkURL=null;
+async function makeTicket(id,job){try{await Promise.all(['28px G14','28px G11','28px G9'].map(f=>document.fonts.load(f)))}catch(e){}
+ const c=document.createElement('canvas');c.width=1080;c.height=1920;const o=c.getContext('2d');o.imageSmoothingEnabled=false;
+ const gr=o.createLinearGradient(0,0,0,1920);gr.addColorStop(0,'#04020c');gr.addColorStop(.5,'#2a0b4a');gr.addColorStop(1,'#6a1606');o.fillStyle=gr;o.fillRect(0,0,1080,1920);
+ let s=11;for(let i=0;i<160;i++){s=(s*16807)%2147483647;const x=s%1080;s=(s*16807)%2147483647;const y=s%1100;o.fillStyle=i%5?'#C2C3C7':'#FFF1E8';o.fillRect(x,y,6,6)}
+ const box=(x,y,w,h,col)=>{o.fillStyle='#000';o.fillRect(x,y,w,h);o.fillStyle=col;o.fillRect(x+12,y+12,w-24,h-24);o.fillStyle='#000';o.fillRect(x+24,y+24,w-48,h-48)};
+ box(60,120,960,1680,'#FFEC27');
+ const T=(t,x,y,size,col,font)=>{o.font=`${size}px ${font},monospace`;o.textAlign='center';o.textBaseline='middle';o.fillStyle='#7E2553';o.fillText(t,x+6,y+6);o.fillStyle=col;o.fillText(t,x,y)};
+ T('직업도감 랜덤 핀볼',540,250,56,'#C2C3C7','G11');T('참가 티켓',540,360,120,'#FFEC27','G14');
+ o.fillStyle='#FF77A8';for(let x=120;x<960;x+=36)o.fillRect(x,450,18,8);
+ // 캐릭터 12x12 → 칸당 50px
+ const S=50,ox=540-6*S,oy=520;o.fillStyle='#111';o.fillRect(ox-30,oy-30,12*S+60,12*S+60);
+ for(let i=0;i<144;i++){const yy=(i/12|0),xx=i%12;o.fillStyle=((xx+yy)%2)?'#1a1a1a':'#222';o.fillRect(ox+xx*S,oy+yy*S,S,S)}
+ for(const [dx,dy] of [[-8,0],[8,0],[0,-8],[0,8]])for(let i=0;i<144;i++)if(px[i]){o.fillStyle='#000';o.fillRect(ox+(i%12)*S+dx,oy+(i/12|0)*S+dy,S,S)}
+ for(let i=0;i<144;i++)if(px[i]){o.fillStyle=SPAL[px[i]];o.fillRect(ox+(i%12)*S,oy+(i/12|0)*S,S,S)}
+ T('@'+id,540,1260,id.length>14?64:84,'#FFF1E8','G11');
+ T('보고 싶은 직업',540,1380,44,'#C2C3C7','G9');T(job,540,1460,job.length>7?72:96,'#3BF0FF','G14');
+ o.fillStyle='#FF77A8';for(let x=120;x<960;x+=36)o.fillRect(x,1560,18,8);
+ T('#직업도감_핀볼',540,1650,72,'#FF77A8','G11');T('1등 직업을 직업도감이 만들어요',540,1860,40,'#FFF1E8','G9');
+ tkURL=c.toDataURL('image/png');$('tkImg').src=tkURL;$('ticket').style.display='block'}
+$('tkSave').onclick=()=>{if(!tkURL)return;const a=document.createElement('a');a.href=tkURL;a.download='jobdogam_pinball_ticket.png';document.body.appendChild(a);a.click();a.remove()};
+</script></body></html>
