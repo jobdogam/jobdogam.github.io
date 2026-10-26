@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>핀볼 신청 현황</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--bg:#0b0d14;--card:#151a26;--line:#262d3d;--ink:#f2f4f8;--sub:#9aa3b5;--yel:#FFD93D;--pk:#ff6b8a;--gr:#3ddc84}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,system-ui,sans-serif;padding:16px}
+.wrap{max-width:980px;margin:0 auto}
+h1{font-size:22px;margin:4px 0 2px}
+.upd{color:var(--sub);font-size:13px;margin-bottom:14px}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.k b{display:block;font-size:26px;color:var(--yel)}
+.k span{font-size:12px;color:var(--sub)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+.box h2{font-size:16px;margin:0 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+input[type=search]{flex:1;min-width:160px;background:#0e121b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:9px 10px;font:inherit}
+button,.btn{background:var(--yel);color:#111;border:0;border-radius:8px;padding:9px 12px;font:700 14px Pretendard,sans-serif;cursor:pointer;text-decoration:none}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:600;font-size:12px}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.made{color:var(--pk);font-size:12px}
+.bar{height:6px;background:var(--yel);border-radius:3px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.ch{background:#0e121b;border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center;font-size:12px}
+.ch canvas{width:56px;height:56px;image-rendering:pixelated;display:block;margin:0 auto 6px;background:#000;border-radius:6px}
+.ch .id{color:var(--sub);word-break:break-all}
+.ch .jb{font-weight:700}
+.ch.x{opacity:.45}
+.scroll{max-height:420px;overflow:auto}
+.err{color:var(--pk)}
+@media (max-width:520px){th:nth-child(4),td:nth-child(4){display:none}}
+</style></head><body><div class="wrap">
+<h1>랜덤 핀볼 신청 현황</h1>
+<div class="upd" id="upd">불러오는 중…</div>
+<div class="kpi">
+ <div class="k"><b id="kRows">-</b><span>신청 건수</span></div>
+ <div class="k"><b id="kIds">-</b><span>참가자(아이디 중복 제외)</span></div>
+ <div class="k"><b id="kJobs">-</b><span>경기에 나갈 직업(공 개수)</span></div>
+ <div class="k"><b id="kMade">-</b><span>이미 만든 직업이라 제외</span></div>
+ <div class="k"><b id="kDraw">-</b><span>캐릭터 직접 그림</span></div>
+</div>
+<div class="box"><h2>경기 돌리기</h2>
+ <div class="row"><a class="btn" href="pinball.html" target="_blank" rel="noopener">게임 열기</a><span style="color:var(--sub);font-size:13px">게임에서 '이벤트 신청 불러오기'를 누르면 아래 목록 그대로 공이 만들어져요.</span></div>
+</div>
+<div class="box"><h2>직업별 (공 1개씩)</h2>
+ <div class="row"><input type="search" id="qJob" placeholder="직업 검색"><button class="ghost" id="reload" type="button">새로고침</button></div>
+ <div class="scroll"><table><thead><tr><th>#</th><th>직업</th><th>신청</th><th></th></tr></thead><tbody id="tJobs"></tbody></table></div>
+</div>
+<div class="box"><h2>참가 캐릭터</h2>
+ <div class="row"><input type="search" id="qCh" placeholder="아이디·직업 검색"></div>
+ <div class="grid" id="gCh"></div>
+</div>
+<div class="box"><h2>최근 신청</h2><div class="scroll"><table><thead><tr><th>시각</th><th>아이디</th><th>직업</th><th></th></tr></thead><tbody id="tRecent"></tbody></table></div></div>
+</div>
+<script>
+'use strict';
+const G='https://docs.google.com/spreadsheets/d/18XwQDvv-OFtv9NA1V1a9SiSLaR6oFu5gNjZfZsZ7qRg/gviz/tq?gid=470754975&tqx=out:csv&tq=';
+const SPAL=[null,'#000000','#1D2B53','#7E2553','#008751','#AB5236','#5F574F','#C2C3C7','#FFF1E8','#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#83769C','#FF77A8','#FFCCAA'];
+const $=i=>document.getElementById(i);
+const norm=s=>String(s||'').toLowerCase().replace(/[\s·()・,.\-]/g,'');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function parseCSV(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(q){if(ch=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(f);f=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&s[i+1]=='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=ch}if(f||row.length){row.push(f);out.push(row)}return out}
+function sprite(code){const c=document.createElement('canvas');c.width=12;c.height=12;const x=c.getContext('2d');if(code&&code.length===144){for(let i=0;i<144;i++){const v=parseInt(code[i],17)||0;if(v){x.fillStyle=SPAL[v];x.fillRect(i%12,(i/12)|0,1,1)}}}else{x.fillStyle='#5F574F';x.beginPath();x.arc(6,6,5,0,7);x.fill()}return c}
+let MADE=new Set(),ENTRIES=[],JOBS=[];
+async function load(){
+ $('upd').textContent='불러오는 중…';
+ try{
+  try{const m=await (await fetch('../made.json?'+Date.now())).json();MADE=new Set(m.map(norm))}catch(e){}
+  const t=await (await fetch(G+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();
+  const rows=parseCSV(t).slice(1).filter(r=>r.length>=3);
+  const byId=new Map();
+  for(const r of rows){const ts=r[0],job=(r[1]||'').trim(),pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,'').toLowerCase(),look=(pk[1]||'').replace(/^p:/,'');if(!id||job.length<2)continue;byId.set(id,{ts,job,id,look})}
+  ENTRIES=[...byId.values()];
+  const jm=new Map();
+  for(const e of ENTRIES){const k=norm(e.job);e.made=MADE.has(k);if(!jm.has(k))jm.set(k,{name:e.job,n:0,made:e.made,ids:[]});const j=jm.get(k);j.n++;j.ids.push(e.id)}
+  JOBS=[...jm.values()].sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name));
+  const live=JOBS.filter(j=>!j.made);
+  $('kRows').textContent=rows.length.toLocaleString();
+  $('kIds').textContent=ENTRIES.length.toLocaleString();
+  $('kJobs').textContent=live.length.toLocaleString();
+  $('kMade').textContent=JOBS.filter(j=>j.made).length+'개 · '+ENTRIES.filter(e=>e.made).length+'명';
+  $('kDraw').textContent=ENTRIES.filter(e=>e.look.length===144).length.toLocaleString();
+  $('upd').textContent='마지막 갱신 '+new Date().toLocaleTimeString('ko-KR')+' · 1분마다 자동 갱신 · 같은 아이디는 마지막 신청만 셈';
+  paintJobs();paintCh();paintRecent(rows);
+ }catch(e){$('upd').innerHTML='<span class="err">불러오지 못했어요. 새로고침을 눌러 주세요.</span>'}
+}
+function paintJobs(){const q=norm($('qJob').value),max=Math.max(1,...JOBS.map(j=>j.n));
+ $('tJobs').innerHTML=JOBS.filter(j=>!q||norm(j.name).includes(q)).map((j,i)=>`<tr><td class="n">${i+1}</td><td>${esc(j.name)}${j.made?' <span class="made">이미 만듦 · 제외</span>':''}</td><td class="n">${j.n}</td><td style="width:35%"><div class="bar" style="width:${Math.round(j.n/max*100)}%;${j.made?'background:#444':''}"></div></td></tr>`).join('')}
+function paintCh(){const q=norm($('qCh').value),g=$('gCh');g.innerHTML='';
+ for(const e of ENTRIES.slice().reverse()){if(q&&!norm(e.id+e.job).includes(q))continue;const d=document.createElement('div');d.className='ch'+(e.made?' x':'');d.appendChild(sprite(e.look));d.insertAdjacentHTML('beforeend',`<div class="jb">${esc(e.job)}</div><div class="id">@${esc(e.id)}</div>`);g.appendChild(d)}}
+function paintRecent(rows){$('tRecent').innerHTML=rows.slice(-50).reverse().map(r=>{const pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,''),made=MADE.has(norm(r[1]));return `<tr><td style="white-space:nowrap">${esc((r[0]||'').replace(/^\d+\. /,''))}</td><td>@${esc(id)}</td><td>${esc(r[1]||'')}</td><td>${made?'<span class="made">제외</span>':''}</td></tr>`}).join('')}
+$('qJob').addEventListener('input',paintJobs);$('qCh').addEventListener('input',paintCh);$('reload').onclick=load;
+load();setInterval(load,60000);
+</script></body></html>
