@@ -56,6 +56,7 @@ a{color:var(--cy)}
  <input id="id" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="@jobdogam" maxlength="31">
  <label for="job">보고 싶은 직업</label>
  <input id="job" type="text" autocomplete="off" placeholder="예) 피아니스트" maxlength="12">
+ <p class="note" id="jobNote" style="color:var(--pk)"></p>
  <p class="note">아이디 하나당 한 캐릭터만 참가해요. 다시 보내면 마지막 신청으로 바뀌어요.</p>
  <div class="row"><button class="btn go" id="send" type="button">참가 신청 ▶</button></div>
  <div id="msg" role="status"></div>
@@ -95,10 +96,16 @@ $('rand').onclick=()=>{px.fill(0);const body=[9,10,11,12,13,15,16,8,14][Math.ran
 const saved=LS.get('pinball_px');if(saved&&saved.length===144){px=[...saved].map(c=>parseInt(c,17)||0)}else $('rand').onclick();paint();
 $('id').value=LS.get('pinball_id')||'';$('job').value=LS.get('pinball_job')||'';
 const normId=v=>v.trim().replace(/^@+/,'').toLowerCase();
+const nJob=s=>s.toLowerCase().replace(/[\s·()・,.\-]/g,'');let MADE=new Set();
+fetch('../made.json?'+Date.now()).then(r=>r.json()).then(a=>{MADE=new Set(a.map(nJob));chkJob()}).catch(()=>{});
+const isMade=j=>MADE.has(nJob(j));
+function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
+$('job').addEventListener('input',chkJob);
 $('id').addEventListener('input',()=>{const v=normId($('id').value);$('prevName').textContent=v?'@'+v:'@아이디'});$('id').dispatchEvent(new Event('input'));
 $('send').onclick=async()=>{const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
  if(!/^[a-z0-9._]{1,30}$/.test(id)){msg('인스타그램 아이디를 확인해 주세요');$('id').focus();return}
  if(job.length<2){msg('보고 싶은 직업을 적어 주세요');$('job').focus();return}
+ if(isMade(job)){msg('이미 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요');$('job').focus();return}
  if(px.filter(v=>v).length<6){msg('캐릭터를 조금 더 그려 주세요');return}
  const b=$('send');b.disabled=true;b.textContent='보내는 중…';
  const body=new URLSearchParams();body.set(F_JOB,job);body.set(F_NICK,id+SEP+'p:'+code());body.set(F_KIND,KIND);
