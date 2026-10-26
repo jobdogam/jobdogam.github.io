@@ -127,8 +127,8 @@ function draw(now){
  for(const b of balls){if(!alive(b)||!inV(b))continue;const i=b.rk-1;const big=(finalT>0&&i<2)||isFocus(b);const sc=(b.r/MR)*(big?1.5:1);drawChar(b,sc);drawFx(b,now)}
  // 닉네임: 상위 3명 + 카메라가 비추는 사람만
  const lb=[];if(simT>0)live.forEach((b,i)=>{if(!inV(b,0))return;const big=(finalT>0&&i<2)||isFocus(b);if(i>=3&&!big)return;const fs=11,font='G11';let yy=b.y-(big?b.r*1.5:b.r)-(big?12:9);
-  const w=Math.max(tw(nick(b),11,'G11'),tw(b.name,i===0?14:9,i===0?'G11':'G9'))+4;let tries=0;const hit=()=>lb.some(o=>b.x-w/2<o.x1&&b.x+w/2>o.x0&&yy-28<o.y1&&yy+6>o.y0);while(hit()&&tries<4){yy-=30;tries++}if(hit())return;lb.push({x0:b.x-w/2,x1:b.x+w/2,y0:yy-28,y1:yy+6});if(tries)pline(b.x,b.y-b.r-2,b.x,yy+5,'rgba(255,241,232,.5)',1);
-  if(i===0){ptext(nick(b),b.x,yy+1,9,P.wh,'center','G9');ptext(b.name,b.x,yy-12,14,P.ye,'center','G11');crown(b.x,yy-25)}else{ptext(nick(b),b.x,yy,fs,i===1?P.cy:i===2?P.pk:P.wh,'center',font);ptext(b.name,b.x,yy-11,9,P.lg,'center','G9')}
+  const w=Math.max(tw(b.name,i===0?14:11,'G11'),tw(subl(b),9,'G9'))+4;let tries=0;const hit=()=>lb.some(o=>b.x-w/2<o.x1&&b.x+w/2>o.x0&&yy-28<o.y1&&yy+6>o.y0);while(hit()&&tries<4){yy-=30;tries++}if(hit())return;lb.push({x0:b.x-w/2,x1:b.x+w/2,y0:yy-28,y1:yy+6});if(tries)pline(b.x,b.y-b.r-2,b.x,yy+5,'rgba(255,241,232,.5)',1);
+  const sl=subl(b);if(i===0){if(sl)ptext(sl,b.x,yy+1,9,P.wh,'center','G9');ptext(b.name,b.x,yy-12,14,P.ye,'center','G11');crown(b.x,yy-25)}else{if(sl)ptext(sl,b.x,yy+1,9,P.lg,'center','G9');ptext(b.name,b.x,yy-11,11,i===1?P.cy:i===2?P.pk:P.wh,'center','G11')}
   if(isFocus(b)&&focus.kind==='spot'&&i>=3){const t=focus.msg;const w=tw(t,9,'G9')+8;px(b.x-w/2,yy+(big?30:22)+b.r,w,12,P.pu);ptext(t,b.x,yy+(big?36:28)+b.r,9,P.wh,'center','G9')}});
  for(const p of pops){const k=(simT-p.t)/0.9;if(k>1||k<0)continue;ptext(p.s,p.x,p.y-k*14,9,k<.5?P.ye:P.wh,'center','G9')}
  g.restore();
@@ -182,14 +182,14 @@ function drawEnding(now){const tt=VT-winVT,E=ending;
  const t1=tt-E.cardIn;
  if(t1>0&&tt<E.badIn+.3){const e=cardIn(t1),out=E.bad?cl((tt-E.badIn)/.3,0,1):0;g.save();g.translate(W/2-out*W,H*.46);const s=.6+.4*e;g.scale(s,s);g.globalAlpha=e;frameBox(-150,-128,300,256,P.ye);px(-146,-124,292,4,P.pk);
   ptext(lastMode?'꼴찌 당첨!':'WINNER!',0,-100,22,P.ye,'center','G14');drawChar({x:0,y:-50,r:18,c:winner.c,look:winner.look,spr:winner.spr,face:1},winner.spr?2.6:1);crown(0,-78);
-  ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(winner.id?`@${winner.id} 님 신청`:'다음 직업 확정!',0,32,11,P.cy,'center','G11');ptext('직업도감이 만들어요!',0,64,12,P.ye,'center','G11');
+  ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(`신청 ${winner.n}명`,0,28,12,P.cy,'center','G11');if(winner.ids.length)ptext(fitText(winner.ids.slice(0,3).map(x=>'@'+x).join(' ')+(winner.ids.length>3?` 외 ${winner.n-3}명`:''),9,'G9',270),0,46,9,P.lg,'center','G9');ptext('직업도감이 만들어요!',0,70,12,P.ye,'center','G11');
   ptext(`기록 ${winner.doneT.toFixed(2)}초 · 번개 ${winner.light}번`,0,96,9,P.lg,'center','G9');g.restore();g.globalAlpha=1}
  // 불운상(WINNER 카드 뒤)
  if(E.bad&&tt>E.badIn&&tt<E.ctaIn+.3){const b=E.bad,e=cardIn(tt-E.badIn),out=cl((tt-E.ctaIn)/.3,0,1);g.save();g.translate(W/2+(1-e)*W-out*W,H*.46);frameBox(-140,-110,280,220,P.la);
   ptext('불운상',0,-84,22,P.la,'center','G14');ptext('번개·함정을 가장 많이 맞은 사람',0,-62,9,P.lg,'center','G9');
   for(let i=0;i<5;i++)px(-20+i*9,-44+((i*7+Math.floor(now*14))%9),1,4,P.bl);px(-24,-50,48,6,P.dk);px(-18,-54,30,5,P.dk);
   drawChar({x:0,y:-14,r:16,c:b.c,look:b.look,spr:b.spr,face:1},b.spr?2.3:1);
-  ptext(nick(b),0,24,13,P.wh,'center','G11');ptext(b.name,0,42,10,P.lg,'center','G9');
+  ptext(b.name,0,24,13,P.wh,'center','G11');ptext(subl(b),0,42,10,P.lg,'center','G9');
   ptext(`번개 ${b.light}번 · 함정 ${b.trap}번`,0,66,11,P.ye,'center','G11');ptext('그래도 끝까지 굴렀다!',0,88,9,P.pk,'center','G9');g.restore()}
  // 엔딩 문구
  if(tt>E.ctaIn){const e=cardIn(tt-E.ctaIn);g.globalAlpha=e;px(0,0,W,H,'rgba(4,2,12,.93)');g.globalAlpha=1;g.save();g.translate(0,(1-e)*40);
@@ -222,15 +222,25 @@ function drawPhoto(k){const ph=photo,rn=ph.snap.find(b=>b.run),S=rn?cl(150/(Math
 let lastTs=performance.now();
 function frame(ts){const dt=Math.min(.05,(ts-lastTs)/1000);lastTs=ts;update(dt);draw(VT);requestAnimationFrame(frame)}
 // ================= 목록 =================
-function parseList(text){const seen=new Set(),out=[];for(let line of text.split(/\n/)){line=line.trim();if(!line)continue;const m=line.match(/@([A-Za-z0-9._]{1,30})/);const id=m?m[1].toLowerCase():'';const lk=(line.match(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/)||[])[1]||'';const job=line.replace(/@[A-Za-z0-9._]+/,'').replace(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/,'').replace(/[,\t|/]+/g,' ').trim().slice(0,12);if(!job)continue;if(id&&seen.has(id))continue;if(id)seen.add(id);out.push({job,id,look:lk})}return out}
+function parseList(text){const seen=new Set(),out=[];for(let line of text.split(/\n/)){line=line.trim();if(!line)continue;const m=line.match(/@([A-Za-z0-9._가-힣]{1,30})/);const id=m?m[1].toLowerCase():'';const lk=(line.match(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/)||[])[1]||'';const job=line.replace(/@[A-Za-z0-9._가-힣]+/,'').replace(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/,'').replace(/[,\t|/]+/g,' ').trim().slice(0,12);if(!job)continue;if(id&&seen.has(id))continue;if(id)seen.add(id);out.push({job,id,look:lk})}return out}
 function parseCSV(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(q){if(ch=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(f);f=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&s[i+1]=='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=ch}if(f||row.length){row.push(f);out.push(row)}return out}
 const $=id=>document.getElementById(id),msg=s=>$('msg').textContent=s;
-$('load').onclick=async()=>{msg('불러오는 중…');try{const r=await fetch(GVIZ+encodeURIComponent(`select * where D = '${FORM_KIND}'`),{cache:'no-store'});const rows=parseCSV(await r.text()).slice(1);const byId=new Map();for(const row of rows){const job=(row[1]||'').trim();const [nk,look]=(row[2]||'').split('␟');const id=(nk||'').trim().replace(/^@/,'').toLowerCase();if(!job||!id)continue;byId.set(id,{job,look:look||''})}$('list').value=[...byId].map(([id,o])=>`${o.job} @${id}${o.look?' #'+o.look:''}`).join('\n');msg(`${byId.size}명 신청을 불러왔어요`)}catch(e){msg('불러오지 못했어요. 목록을 직접 붙여 넣어 주세요')}};
+$('load').onclick=async()=>{msg('불러오는 중…');try{const r=await fetch(GVIZ+encodeURIComponent(`select * where D = '${FORM_KIND}'`),{cache:'no-store'});const rows=parseCSV(await r.text()).slice(1);const byId=new Map();for(const row of rows){const job=(row[1]||'').trim();const [nk,look]=(row[2]||'').split('␟');const id=(nk||'').trim().replace(/^@/,'').toLowerCase();if(!job||!id)continue;byId.set(id,{job,look:look||''})}$('list').value=[...byId].map(([id,o])=>`${o.job} @${id}${o.look?' #'+o.look:''}`).join('\n');await loadMade();updInfo(`${byId.size}명 신청을 불러왔어요`)}catch(e){msg('불러오지 못했어요. 목록을 직접 붙여 넣어 주세요')}};
 function demoText(n=24){const J=['피아니스트','한의사','농구선수','초등교사','플로리스트','제빵사','래퍼','특수교사','외교관','댄서','사육사','수능 출제위원','배드민턴 선수','항공기 정비사','치어리더','음반기획자','골프선수','측량사','네일아티스트','심판','기상캐스터','소방관 꿈나무','웹소설 작가','e스포츠 코치'];const I=Array.from({length:24},(_,i)=>'참가자'+(i+1));const SP=['000000000000009000000900099900009990099999999990999999999990991899991809999999999990999966669999099999999990009999999900000900009000000000000000','00000000000000cc0000cc000c81c00c81c00cccccccccc0cccccccccccccc99999999ccccc999999ccc0cccccccccc000cc0000cc000cc000000cc0000000000000000000000000'];
  const J2=['간호사','경찰관','수의사','건축가','바리스타','프로게이머','성우','큐레이터','조향사','파일럿','셰프','변호사','유튜버','작곡가','마술사','천문학자','소믈리에','웹툰작가','로봇공학자','스턴트맨'];const r=seedRand(n*7+3),A='abcdefghijklmnopqrstuvwxyz';
- const out=[];for(let i=0;i<n;i++){if(i<24)out.push(`${J[i]} @${I[i]}${i<2?' #p:'+SP[i]:''}`);else{let id='';const L=5+Math.floor(r()*5);for(let k=0;k<L;k++)id+=r()<.2?String(Math.floor(r()*10)):A[Math.floor(r()*26)];if(r()<.3)id+=(r()<.5?'_':'.')+Math.floor(r()*99);out.push(`${J2[Math.floor(r()*J2.length)]} @참가자${i+1}`)}}return out.join('\n')}
-$('demo').onclick=()=>{$('list').value=demoText(+(QS.get('n')||24));msg('')};
-function startRace(){const list=parseList($('list').value);if(list.length<2){msg('직업을 2개 이상 넣어 주세요');return false}
+ const out=[];for(let i=0;i<n;i++){if(i<24)out.push(`${J[i]} @${I[i]}${i<2?' #p:'+SP[i]:''}`);else{let id='';const L=5+Math.floor(r()*5);for(let k=0;k<L;k++)id+=r()<.2?String(Math.floor(r()*10)):A[Math.floor(r()*26)];if(r()<.3)id+=(r()<.5?'_':'.')+Math.floor(r()*99);out.push(`${J2[(i-24)%J2.length]}${i>=44?' '+(Math.floor((i-24)/J2.length)+1)+'호':''} @참가자${i+1}`)}}return out.join('\n')}
+$('demo').onclick=()=>{$('list').value=demoText(+(QS.get('n')||24));updInfo()};
+// 같은 직업은 공 1개(신청자 수와 상관없이), 이미 만든 직업(../made.json)은 뺌
+let MADE=new Set();async function loadMade(){try{const r=await fetch('../made.json?'+Date.now(),{cache:'no-store'});const a=await r.json();MADE=new Set(a.map(normJob))}catch(e){}}
+function groupJobs(list){const m=new Map();let ex=0;const exJ=new Set();
+ for(const e of list){const k=normJob(e.job);if(!k)continue;if(MADE.has(k)){ex++;exJ.add(k);continue}let q=m.get(k);if(!q){q={job:e.job,ids:[],anon:0,looks:[]};m.set(k,q)}
+  if(e.id){if(!q.ids.includes(e.id))q.ids.push(e.id)}else q.anon++;if(/^p:/.test(e.look||''))q.looks.push(e.look)}
+ const out=[...m.entries()].map(([k,q])=>{const n=q.ids.length+q.anon,r=seedRand(hash(k)+11);const look=q.looks.length?q.looks[Math.floor(r()*q.looks.length)]:'';return{job:q.job,id:n===1&&q.ids.length===1?q.ids[0]:'',n,ids:q.ids,look}});
+ return{list:out,ex,exJobs:exJ.size,apps:list.length}}
+function updInfo(pre=''){const q=groupJobs(parseList($('list').value));msg((pre?pre+' · ':'')+`신청 ${q.apps}건 → 직업 ${q.list.length}개(공 ${q.list.length}개)`+(q.ex?` · 이미 만든 직업 ${q.exJobs}개(${q.ex}건) 제외`:''));return q}
+$('list').addEventListener('input',()=>updInfo());
+loadMade();
+function startRace(){const list=groupJobs(parseList($('list').value)).list;if(list.length<2){msg('직업을 2개 이상 넣어 주세요(이미 만든 직업은 빠져요)');return false}
  if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=$('lastMode').checked;tempo=150;build();makeBalls(list);simT=-3.4;acc=0;cam={x:500,y:120,z:1};stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
  const t=aNow();if(t!=null){[0,1,2].forEach(i=>tone(440,t+.4+i,.14,'square',.06));tone(880,t+3.4,.3,'square',.07);later(3.4,musicStart)}return true}
 $('start').onclick=startRace;

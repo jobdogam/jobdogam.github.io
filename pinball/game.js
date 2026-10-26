@@ -147,12 +147,12 @@ let leadCur=null,leadCand=null,leadN=0,leadShow=null,lastLeadAnn=-9,focus={b:nul
 function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
 function parseLook(code,key){const h=hash(key||'x');const sp=(code||'').match(/p:([0-9a-g]{144})/);if(sp)return{c:0,f:0,h:0,spr:sp[1]};const m=(code||'').match(/c(\d+)f(\d+)h(\d+)/);return m?{c:+m[1]%BODY.length,f:+m[2]%FACES.length,h:+m[3]%HATS.length}:{c:h%BODY.length,f:(h>>4)%FACES.length,h:(h>>8)%HATS.length}}
 function makeBalls(list){
- balls=list.map((e,i)=>{const lk=parseLook(e.look,e.id||e.job);return{name:e.job,id:e.id||'',look:lk,c:lk.spr?sprMain(lk.spr):BODY[lk.c],spr:lk.spr?sprCanvas(lk.spr):null,x:0,y:0,vx:0,vy:0,r:MR,done:false,out:false,rank:0,rk:0,sy:0,st:0,tp:0,face:1,stun:0,light:0,trap:0,backUsed:false,shield:false,it:null,webT:0,bombT:0,wind:null,windDone:-9,spot:0}});
+ balls=list.map((e,i)=>{const lk=parseLook(e.look,e.id||e.job);return{name:e.job,id:e.id||'',n:e.n||1,ids:e.ids||(e.id?[e.id]:[]),look:lk,c:lk.spr?sprMain(lk.spr):BODY[lk.c],spr:lk.spr?sprCanvas(lk.spr):null,x:0,y:0,vx:0,vy:0,r:MR,done:false,out:false,rank:0,rk:0,sy:0,st:0,tp:0,face:1,stun:0,light:0,trap:0,backUsed:false,shield:false,it:null,webT:0,bombT:0,wind:null,windDone:-9,spot:0}});
  const idx=balls.map((_,i)=>i).sort(()=>R()-.5);const cols=Math.max(12,Math.ceil(balls.length/8));const dx=Math.min(15,180/cols);
  idx.forEach((k,j)=>{const b=balls[k];b.x=410+(j%cols)*dx+(Math.floor(j/cols)%2?dx/2:0);b.y=160-MR-Math.floor(j/cols)*15});
  leadCur=null;leadCand=null;leadN=0;leadShow=null;lastLeadAnn=-9;fin=[];winner=null;winT=-1;winVT=-1;finalT=-1;focus={b:null,until:0,msg:''};nextSpot=6;klog=[];photo=null;ending=null;elimShow=null;musicCut=false;
  const n=balls.length;elimCP=(!lastMode&&n>30)?[{y:2650,keep:Math.max(30,Math.ceil(n*.5))},{y:3460,keep:Math.max(20,Math.ceil(n*.25))}]:[];
- boss.max=boss.hp=Math.min(8,1+Math.round(n*.04));
+ boss.max=boss.hp=n<=30?2:n<=120?3:4;
 }
 // 직접 그린 12x12 캐릭터: 글자 하나가 한 칸(0=빈칸, 1~g=팔레트)
 const SPAL=[null,'#000000','#1D2B53','#7E2553','#008751','#AB5236','#5F574F','#C2C3C7','#FFF1E8','#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#83769C','#FF77A8','#FFCCAA'];
@@ -160,7 +160,10 @@ function sprCanvas(code){const c=document.createElement('canvas');c.width=c.heig
  for(const [ox,oy] of [[0,1],[2,1],[1,0],[1,2]])for(let i=0;i<144;i++){const v=parseInt(code[i],17);if(v){o.fillStyle='#000';o.fillRect(i%12+ox,(i/12|0)+oy,1,1)}}
  for(let i=0;i<144;i++){const v=parseInt(code[i],17);if(v){o.fillStyle=SPAL[v];o.fillRect(i%12+1,(i/12|0)+1,1,1)}}return c}
 function sprMain(code){const n={};for(const ch of code)if(ch!=='0'&&ch!=='1')n[ch]=(n[ch]||0)+1;const k=Object.keys(n).sort((a,b)=>n[b]-n[a])[0];return k?SPAL[parseInt(k,17)]:'#FFF1E8'}
-const nick=b=>b.id?'@'+b.id:b.name;
+const nick=b=>b.name;
+const subl=b=>b.n>1?`신청 ${b.n}명`:(b.id?'@'+b.id:'');
+// 직업 이름 정규화(사이트 norm과 같게): 공백·괄호·가운뎃점·쉼표·마침표·하이픈 무시, 소문자
+const normJob=s=>String(s||'').toLowerCase().replace(/[\s·()・,.\-]/g,'');
 const alive=b=>!b.done&&!b.out;
 // ================= 물리 =================
 function hitSeg(b,x1,y1,x2,y2,vxw,vyw,rest,th){
@@ -272,7 +275,7 @@ function stepSim(dt){
   if(b.x<L||b.x>RX){b.x=cl(b.x,L+10,RX-10)}
   if(Math.abs(b.vx)>8)b.face=b.vx>0?1:-1;
  }
- for(let i=0;i<balls.length;i++){const a=balls[i];if(!alive(a)||a.wind)continue;for(let k=i+1;k<balls.length;k++){const c=balls[k];if(!alive(c)||c.wind)continue;const dx=c.x-a.x,dy=c.y-a.y;if(Math.abs(dx)>26||Math.abs(dy)>26)continue;const d=Math.hypot(dx,dy),rr=a.r+c.r;if(d<rr&&d>0){const ma=a.r*a.r,mc=c.r*c.r,wa=mc/(ma+mc),wc=ma/(ma+mc);const nx=dx/d,ny=dy/d,o=(rr-d);a.x-=nx*o*wa;a.y-=ny*o*wa;c.x+=nx*o*wc;c.y+=ny*o*wc;const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const j=-1.5*rv;a.vx-=j*wa*nx;a.vy-=j*wa*ny;c.vx+=j*wc*nx;c.vy+=j*wc*ny}}}}
+ const BB=balls.filter(b=>alive(b)&&!b.wind).sort((a,c)=>a.y-c.y);for(let i=0;i<BB.length;i++){const a=BB[i];for(let k=i+1;k<BB.length;k++){const c=BB[k];const dy=c.y-a.y;if(dy>26)break;const dx=c.x-a.x;if(Math.abs(dx)>26)continue;const d=Math.hypot(dx,dy),rr=a.r+c.r;if(d<rr&&d>0){const ma=a.r*a.r,mc=c.r*c.r,wa=mc/(ma+mc),wc=ma/(ma+mc);const nx=dx/d,ny=dy/d,o=(rr-d);a.x-=nx*o*wa;a.y-=ny*o*wa;c.x+=nx*o*wc;c.y+=ny*o*wc;const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const j=-1.5*rv;a.vx-=j*wa*nx;a.vy-=j*wa*ny;c.vx+=j*wc*nx;c.vy+=j*wc*ny}}}}
 }
 function onFinish(b){
  if(photo&&!photo.gap&&b===photo.c)photo.gap=Math.max(.01,b.doneT-winner.doneT);
