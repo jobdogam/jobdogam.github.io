@@ -36,7 +36,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .scroll{max-height:420px;overflow:auto}
 .err{color:var(--pk)}
 @media (max-width:520px){th:nth-child(4),td:nth-child(4){display:none}}
-</style></head><body><div class="wrap">
+</style></head><body><div id="gate" style="max-width:320px;margin:20vh auto;text-align:center"><h1>관리 페이지</h1><p style="color:var(--sub);font-size:14px">비밀번호를 입력하세요</p><input id="pw" type="password" inputmode="numeric" autocomplete="off" style="width:100%;background:#0e121b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:12px;font:inherit;text-align:center;font-size:20px;letter-spacing:6px"><p id="pwMsg" class="err" style="min-height:20px"></p><button id="pwGo" type="button" style="width:100%">들어가기</button></div><div class="wrap" id="main" hidden>
 <h1>랜덤 핀볼 신청 현황</h1>
 <div class="upd" id="upd">불러오는 중…</div>
 <div class="kpi">
@@ -97,5 +97,11 @@ function paintCh(){const q=norm($('qCh').value),g=$('gCh');g.innerHTML='';
  for(const e of ENTRIES.slice().reverse()){if(q&&!norm(e.id+e.job).includes(q))continue;const d=document.createElement('div');d.className='ch'+(e.made?' x':'');d.appendChild(sprite(e.look));d.insertAdjacentHTML('beforeend',`<div class="jb">${esc(e.job)}</div><div class="id">@${esc(e.id)}</div>`);g.appendChild(d)}}
 function paintRecent(rows){$('tRecent').innerHTML=rows.slice(-50).reverse().map(r=>{const pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,''),made=MADE.has(norm(r[1]));return `<tr><td style="white-space:nowrap">${esc((r[0]||'').replace(/^\d+\. /,''))}</td><td>@${esc(id)}</td><td>${esc(r[1]||'')}</td><td>${made?'<span class="made">제외</span>':''}</td></tr>`}).join('')}
 $('qJob').addEventListener('input',paintJobs);$('qCh').addEventListener('input',paintCh);$('reload').onclick=load;
-load();setInterval(load,60000);
+const PH='e972c0584b62081a76f651221498ad8001bde72c8ec79afad63d3d7d73b7de49';
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+let started=false;function open_(){$('gate').remove();$('main').hidden=false;if(!started){started=true;load();setInterval(load,60000)}}
+async function tryPw(v){if(await sha('jobdogam-pinball:'+v)===PH){try{sessionStorage.setItem('pbadm',PH)}catch(e){}open_();return true}return false}
+$('pwGo').onclick=async()=>{if(!(await tryPw($('pw').value.trim())))$('pwMsg').textContent='비밀번호가 맞지 않아요'};
+$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')$('pwGo').click()});
+try{if(sessionStorage.getItem('pbadm')===PH)open_()}catch(e){}
 </script></body></html>
