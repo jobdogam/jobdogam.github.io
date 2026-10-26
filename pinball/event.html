@@ -40,7 +40,7 @@ input[type=text]:focus{outline:none;box-shadow:inset 0 0 0 3px var(--cy)}
 a{color:var(--cy)}
 </style></head><body><div class="wrap">
 <h1>랜덤 핀볼</h1>
-<p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
+<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
 
 <div class="box">
  <h2>1. 내 캐릭터 그리기</h2>
@@ -134,4 +134,7 @@ async function makeTicket(id,job){try{await Promise.all(['28px G14','28px G11','
  T('#직업도감_핀볼',540,1650,72,'#FF77A8','G11');T('1등 직업을 직업도감이 만들어요',540,1860,40,'#FFF1E8','G9');
  tkURL=c.toDataURL('image/png');$('tkImg').src=tkURL;$('ticket').style.display='block'}
 $('tkSave').onclick=()=>{if(!tkURL)return;const a=document.createElement('a');a.href=tkURL;a.download='jobdogam_pinball_ticket.png';document.body.appendChild(a);a.click();a.remove()};
+
+(function(){const G='https://docs.google.com/spreadsheets/d/18XwQDvv-OFtv9NA1V1a9SiSLaR6oFu5gNjZfZsZ7qRg/gviz/tq?gid=470754975&tqx=out:csv&tq=';
+function go(){fetch(G+encodeURIComponent("select C where D = '핀볼이벤트'"),{cache:'no-store'}).then(r=>r.text()).then(s=>{const S=new Set();s.trim().split('\n').slice(1).forEach(l=>{const id=l.replace(/^"|"$/g,'').split('␟')[0].trim().replace(/^@+/,'').toLowerCase();if(id)S.add(id)});if(S.size)$('pbCnt').textContent='지금 '+S.size.toLocaleString()+'명 참가 중'}).catch(()=>{})}go();setInterval(go,60000)})();
 </script></body></html>
