@@ -139,6 +139,9 @@ function build(){
 // 보스: 깔때기 왼쪽 벽을 따라 왔다 갔다, 가끔 점프(그 밑으로 지나갈 수 있음)
 function bossPos(t){const x=150+(Math.sin(t*.8)+1)*95;const wy=4480+(x-10)*300/448;const ph=((t%2.2)+2.2)%2.2;const hop=ph<.85?Math.sin(ph/.85*Math.PI)*64:0;return{x,y:wy-40-hop,air:ph<.85}}
 function bossMove(t,dt){const p=bossPos(t);boss.vx=(p.x-boss.x)/dt;boss.vy=(p.y-boss.y)/dt;boss.x=p.x;boss.y=p.y;if(boss.wasAir&&!p.air&&boss.dead<0&&Math.abs(boss.y-cam.y)<400){sfx(70,.18,'square',.07,-30);boss.land=simT}boss.wasAir=p.air}
+// 역풍 범퍼: 골 입구 앞을 작은 원으로 공전(한 바퀴 2초), 공마다 1번만 약하게 튕김
+const WB={r:9,cx:500,cy:GOAL_Y-56,ax:16,ay:12};
+function wbPos(t){const a=t*Math.PI;return{x:WB.cx+Math.cos(a)*WB.ax,y:WB.cy+Math.sin(a)*WB.ay}}
 function pistonExt(p,t){const q=((t+p.ph)%1.6+1.6)%1.6;if(q<1.0)return 0;if(q<1.08)return (q-1.0)/.08*p.max;if(q<1.35)return p.max;return p.max*(1-(q-1.35)/.25)}
 let meteorZone=null,lightning=null,web=null,bomb=null;
 // ================= 공 =================
@@ -243,6 +246,8 @@ function stepSim(dt){
   // 피스톤(결승선 앞)
   for(const p of pistons){if(Math.abs(b.y-p.y)>24)continue;const bx=p.side<0?funL(p.y):funR(p.y),tip=bx-p.side*p.ext;const x0=Math.min(bx,tip),x1=Math.max(bx,tip);
    hitSeg(b,x0,p.y-9,x1,p.y-9,0,0,.3,2);hitSeg(b,x0,p.y+9,x1,p.y+9,0,0,.3,2);const h=hitSeg(b,tip,p.y-9,tip,p.y+9,-p.side*Math.max(0,p.v),0,.5,2);if(h&&p.v>50&&simT-(p.hit||-9)>.3){p.hit=simT;sfx(140,.12,'square',.06,200);pops.push({x:tip,y:p.y-20,t:simT,s:'퍽!'})}}
+  // 역풍 범퍼
+  if(!b.bumpUsed&&b.y>WB.cy-40&&b.y<WB.cy+40){const q=wbPos(simT),dx=b.x-q.x,dy=b.y-q.y,d=Math.hypot(dx,dy);if(d<b.r+WB.r&&d>0){b.bumpUsed=true;const sd=dx>=0?1:-1;b.x=q.x+dx/d*(b.r+WB.r+1);b.y=q.y+dy/d*(b.r+WB.r+1);b.vy=-170;b.vx=sd*110;WB.hit=simT;pops.push({x:q.x,y:q.y-18,t:simT,s:'튕김!'});sfx(660,.14,'sine',.08,320);klog.push({t:VT,msg:`튕김! ${nick(b)}`,kind:'bump'});if(klog.length>6)klog.shift()}}
   // 보스
   if(boss.dead<0){const dx=b.x-boss.x,dy=b.y-boss.y,d=Math.hypot(dx,dy),rr=b.r+boss.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=boss.x+nx*rr;b.y=boss.y+ny*rr;const rvx=b.vx-boss.vx,rvy=b.vy-boss.vy,vn=rvx*nx+rvy*ny;
    if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.vx+=nx*60;b.vy+=ny*60-40;

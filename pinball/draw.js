@@ -100,6 +100,9 @@ function drawCourse(now,v){
   px(bx-(p.side<0?14:0),p.y-11,14,22,P.k);px(bx-(p.side<0?13:-1),p.y-10,12,20,P.dk);ptext('피스톤',bx-p.side*-2+(p.side<0?-14:14),p.y-20,9,P.lg,'center','G9')}
  for(const m of meteors){if(!vis(m.x,m.y))continue;for(let i=1;i<6;i++)px(m.x-m.vx*.02*i-2,m.y-i*5-2,4,4,i<3?P.or:P.rd);circ(m.x,m.y,m.r,P.br);circ(m.x-2,m.y-2,m.r-4,P.or)}
  if(lightning&&lightning.strike&&simT-lightning.strike.t<.35){const s=lightning.strike;let x=s.x,y=s.y-260;while(y<s.y){const nx=x+(VR()-.5)*24,ny=y+18;pline(x,y,nx,ny,P.ye,3);pline(x,y,nx,ny,P.wh,1);x=nx;y=ny}}
+ if(vis(500,WB.cy,80)){const q=wbPos(simT),lit=simT-(WB.hit||-9)<.2,x=Math.round(q.x),y=Math.round(q.y);for(let i=0;i<12;i++){const a=i/12*6.283;px(WB.cx+Math.cos(a)*WB.ax,WB.cy+Math.sin(a)*WB.ay,1,1,'rgba(255,241,232,.35)')}
+  const c1=lit?P.wh:P.ye,c2=lit?P.ye:P.or;px(x-2,y-10,5,20,P.k);px(x-10,y-2,20,5,P.k);px(x-6,y-6,13,13,P.k);px(x-1,y-9,3,18,c1);px(x-9,y-1,18,3,c1);px(x-5,y-5,11,11,c1);px(x-3,y-3,7,7,c2);px(x-2,y-4,2,2,P.wh);
+  const tw=Math.floor(now*8)%4;if(tw<2){px(x+8,y-9,1,3,P.wh);px(x+7,y-8,3,1,P.wh)}else{px(x-9,y+6,1,3,P.cy);px(x-10,y+7,3,1,P.cy)}}
  if(vis(boss.x,boss.y,120))drawBoss(now);
  for(const e of booms){const k=(simT-e.t)/(e.big?1:.6);if(k<0||k>1)continue;const R0=(e.big?70:50)*EIN(k);for(let i=0;i<24;i++){const a=i/24*6.283+e.t;px(e.x+Math.cos(a)*R0-2,e.y+Math.sin(a)*R0-2,4,4,i%3?P.or:P.ye)}if(k<.3)circ(e.x,e.y,Math.round(R0*.6),k<.15?P.wh:P.ye)}
  // 결승
@@ -134,7 +137,7 @@ function draw(now){
  g.restore();
  if(window.noHUD){if(winner&&!window.noEnding)drawEnding(now)}else drawHUD(now,ord,live);
 }
-const KC={light:P.ye,hole:P.pu,back:P.rd,lava:P.or,fwd:P.cy,item:P.gr,bomb:P.rd,web:P.lg,wind:P.bl,boss:P.pk,elim:P.rd,spot:P.la};
+const KC={bump:P.ye,light:P.ye,hole:P.pu,back:P.rd,lava:P.or,fwd:P.cy,item:P.gr,bomb:P.rd,web:P.lg,wind:P.bl,boss:P.pk,elim:P.rd,spot:P.la};
 function stageBar(live){const y0=H-26;px(0,y0-2,W,28,'rgba(0,0,0,.8)');px(0,y0-2,W,2,P.pu);const cnt=ZONES.map(()=>0);let goal=0;for(const b of balls){if(b.out)continue;if(b.done){goal++;continue}cnt[zoneOf(b.y)]++}
  const lz=live.length?zoneOf(live[0].y):6;const nOut=balls.filter(b=>b.out).length;const cells=ZONES.length+(nOut?1:0),cw=W/cells;
  ZONES.forEach(([_,nm],i)=>{const x=i*cw,on=i===lz;if(on)px(x+1,y0,cw-2,24,P.pu);ptext(nm,x+cw/2,y0+6,9,on?P.ye:P.lg,'center','G9');ptext(String(cnt[i]+(i===6?goal:0)),x+cw/2,y0+17,11,cnt[i]||(i===6&&goal)?P.wh:P.dk,'center','G11');if(i<ZONES.length-1)px(x+cw-1,y0+2,1,20,P.dk)});
