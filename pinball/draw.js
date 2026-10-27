@@ -70,7 +70,7 @@ function drawCourse(now,v){
  const vis=(x,y,m=40)=>x>v.l-m&&x<v.r+m&&y>v.t-m&&y<v.b+m;
  for(const s of segs){if(Math.max(s.y1,s.y2)<v.t-10||Math.min(s.y1,s.y2)>v.b+10||Math.max(s.x1,s.x2)<v.l-10||Math.min(s.x1,s.x2)>v.r+10)continue;
   if(s.kind==='side'){for(let y=Math.max(v.t|0,-300)-((v.t|0)%8);y<v.b;y+=8){const c=y<1600?P.nv:y<2640?'#5aa7e0':y<3440?P.br:'#4a1408';px(s.x1-4,y,8,7,c);px(s.x1-3,y,6,1,y>3440?P.or:shade(c,1.5))}continue}
-  if(s.kind==='trap'){if(simT<0){pline(s.x1,s.y1,s.x2,s.y2,P.rd,4);for(let x=s.x1;x<s.x2;x+=8)px(x,s.y1-2,4,4,(Math.floor(now*6)%2)?P.ye:P.rd)}continue}
+  if(s.kind==='trap'){if(simT<s.open){pline(s.x1,s.y1,s.x2,s.y2,P.rd,4);for(let x=s.x1;x<s.x2;x+=8)px(x,s.y1-2,4,4,(Math.floor(now*6)%2)?P.ye:P.rd)}continue}
   if(s.kind==='trapdoor'){const tdr=trapd.find(t=>t.s===s);const ph=(simT+tdr.ph)%2.4;if(s.on){brickLine(s);if(ph>2.0&&Math.floor(now*10)%2)pline(s.x1,s.y1-4,s.x2,s.y2-4,P.rd,2)}else{pline(s.x1,s.y1,s.x1+6,s.y1+10,P.rd,3);pline(s.x2,s.y2,s.x2-6,s.y2+10,P.rd,3)}continue}
   if(s.kind==='belt'){const bl=belts.find(q=>q.s===s);pline(s.x1,s.y1+2,s.x2,s.y2+2,'#cfe9ff',8);pline(s.x1,s.y1,s.x2,s.y2,P.wh,6);const len=Math.hypot(s.x2-s.x1,s.y2-s.y1),tx=(s.x2-s.x1)/len,ty=(s.y2-s.y1)/len,dir=Math.sign(tx)*Math.sign(bl.v||1);const off=((now*Math.abs(bl.v))%16+16)%16;for(let d=off;d<len;d+=16){const x=s.x1+tx*d,y=s.y1+ty*d;px(x,y-1,3,2,P.bl);px(x-dir*3,y-2,2,1,P.bl);px(x-dir*3,y+1,2,1,P.bl)}continue}
   brickLine(s)}
@@ -144,7 +144,9 @@ function stageBar(live){const y0=H-26;px(0,y0-2,W,28,'rgba(0,0,0,.8)');px(0,y0-2
  if(nOut){const x=ZONES.length*cw;px(x,y0,cw,24,'#3a0010');ptext('탈락',x+cw/2,y0+6,9,P.rd,'center','G9');ptext(String(nOut),x+cw/2,y0+17,11,P.rd,'center','G11')}}
 // 미니맵: 왼쪽 위 세로 전체 맵(구간 색), 점은 1·2·3등 + 카메라가 비추는 공 + 내 직업 공만
 function minimap(live){const x0=4,y0=150,h=270,w=12;px(x0-2,y0-2,w+4,h+4,P.k);for(let i=0;i<h;i+=2)px(x0,y0+i,w,2,bgCol(i/h*GOAL_Y));
- ZONES.forEach(([zy])=>{if(zy>0)px(x0,y0+Math.round(zy/GOAL_Y*h),w,1,'rgba(255,241,232,.45)')});px(x0,y0+h-2,w,2,P.ye);
+ ZONES.forEach(([zy])=>{if(zy>0)px(x0,y0+Math.round(zy/GOAL_Y*h),w,1,'rgba(255,241,232,.45)')});
+ // 레인 구조: 위 3개 → 가운데 2개 → 아래 1개
+ for(const [lx,ya,yb] of [[335,-300,1598],[665,-300,1598],[500,1662,3450]])px(x0+Math.round(lx/WW*w),y0+Math.max(0,Math.round(ya/GOAL_Y*h)),1,Math.round((yb-Math.max(0,ya))/GOAL_Y*h),P.k);px(x0,y0+h-2,w,2,P.ye);
  const vy0=(cam.y-H*.5/cam.z)/GOAL_Y*h,vy1=(cam.y+H*.5/cam.z)/GOAL_Y*h;px(x0-2,y0+cl(vy0,0,h),2,Math.max(2,cl(vy1,0,h)-cl(vy0,0,h)),P.wh);
  const dot=(b,c,big)=>{if(!b||b.out)return;const yy=y0+cl((b.done?GOAL_Y:b.y)/GOAL_Y*h,1,h-2),xx=x0+1+cl(b.x/WW*(w-5),0,w-5);const s=big?5:3;px(xx-1,yy-1-(big?1:0),s+2,s+2,P.k);px(xx,yy-(big?1:0),s,s,c)};
  const fb=focus.b&&simT<focus.until?focus.b:null;dot(fb,P.wh);[live[2],live[1],live[0]].forEach((b,i)=>dot(b,[P.pk,P.cy,P.ye][i]));if(FIND.b&&Math.floor(VT*4)%2===0)dot(FIND.b,P.gr,true)}
@@ -267,7 +269,7 @@ function curList(){PRACTICE=false;if(REPLAY){INFO={apps:REPLAY.apps||REPLAY.list
 const ymd=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
 function startRace(seed){const list=curList();if(list.length<2){msg('직업을 2개 이상 넣어 주세요(이미 만든 직업은 빠져요)');return false}
  if(seed==null)seed=REPLAY?REPLAY.seed:1+Math.floor(Math.random()*2147483000);R=seedRand(seed);VR=seedRand(seed+99);
- if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;build();makeBalls(list);simT=-3.4;acc=0;cam={x:500,y:120,z:1};stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
+ if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;START_N=list.length;build();makeBalls(list);simT=-3.4;acc=0;{const sb=START,z=Math.min(1,(W-16)/(sb.w+20),(H*.42)/(sb.h+20));cam={x:500,y:sb.top+sb.h/2-70/z,z}}stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
  // 기록(다시보기용): 직업별 공 목록·가린 아이디·캐릭터 코드·시드
  RACE={v:2,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,k:e.k||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
  applyFind();

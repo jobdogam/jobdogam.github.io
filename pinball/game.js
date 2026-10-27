@@ -62,61 +62,60 @@ const funL=y=>10+(y-4480)/300*448,funR=y=>990-(y-4480)/300*448;
 function build(){
  segs=[];pegs=[];bumps=[];mills=[];belts=[];pipes=[];pads=[];wheels=[];pends=[];plats=[];holes=[];pits=[];geys=[];boosts=[];cannons=[];spinners=[];trapd=[];stages=[];pops=[];meteors=[];boxes=[];whirls=[];pistons=[];booms=[];
  S(L,-300,L,GOAL_Y+200,P.nv,'side');S(RX,-300,RX,GOAL_Y+200,P.nv,'side');
+ // ================= 레인: 위 3개(우주~태양계) → 가운데 2개(하늘~땅속) → 아래 1개(용암~FINAL) =================
+ const g3=[[10,335],[335,665],[665,990]],g2=[[10,500],[500,990]];
+ S(335,-300,335,1598,P.nv);S(665,-300,665,1598,P.nv);S(500,1662,500,3450,P.nv);
+ const ramp=(xa,xb,y,dir,drop,c,kind)=>{const gp=46;return dir>0?S(xa,y,xb-gp,y+drop,c,kind):S(xb,y,xa+gp,y+drop,c,kind)};
+ const at=(s,f)=>({x:s.x1+(s.x2-s.x1)*f,y:s.y1+(s.y2-s.y1)*f});
  // ---------- 우주 ----------
  stages.push({y:0,n:'STAGE 1 · 우주'});
- S(400,30,400,170,P.la);S(600,30,600,170,P.la);S(400,170,600,170,P.rd,'trap');
- pegField(290,710,215,7,40,28);
- const r1=S(L,440,930,520,P.la);box(r1,560);
- boosts.push({x:250,y:458,dir:1});boosts.push({x:500,y:480,dir:1});
- holes.push({x:700,y:470,r:9,pull:70,to:{x:500,y:110},msg:'블랙홀! 출발점으로',c:P.pu});
- pegField(850,975,545,3,30,26);
- // ---------- 은하계 ----------
+ // 스타트존: 레인마다 하나(공을 레인 3개에 고르게), 뚜껑·벽으로 막고 바닥은 가운데부터 차례로 열림
+ {const n3=Math.ceil(START_N/3);const bx=g3.map(([xa,xb])=>{const sb=startBox(n3,xa,xb);S(sb.x0,sb.top,sb.x0,170,P.la);S(sb.x1,sb.top,sb.x1,170,P.la);S(sb.x0,sb.top,sb.x1,sb.top,P.la);
+   const nf=Math.max(3,Math.round(sb.w/24)),fw=sb.w/nf,cx=(sb.x0+sb.x1)/2;for(let i=0;i<nf;i++){const a=sb.x0+i*fw,c=a+fw,f=S(a,170,c,170,P.rd,'trap');f.open=Math.abs((a+c)/2-cx)/(sb.w/2)*sb.openT}return sb});
+  const top=Math.min(...bx.map(q=>q.top));START={boxes:bx,x0:bx[0].x0,x1:bx[2].x1,top,w:bx[2].x1-bx[0].x0,h:170-top}}
+ const LC=[P.la,P.bl,P.pk];
+ g3.forEach(([xa,xb],v)=>{const xc=(xa+xb)/2;let dir=v===1?-1:1;const rows=[];
+  pegField(xa+26,xb-26,215,5,36,28);
+  for(let k=0;k<11;k++){const y=380+k*112;const s=ramp(xa,xb,y,dir,44,k>=7?P.lg:LC[v]);rows.push(s);
+   const T=k===2||k===5?['mill','spin','mill2'][(v+(k===5?1:0))%3]:['boost','hole','','box','worm','','boost','bump','box','bump','box'][k];
+   if(T==='boost'){const p=at(s,.45);boosts.push({x:p.x,y:p.y-3,dir})}
+   if(T==='hole'){const p=at(s,.62);holes.push({x:p.x,y:p.y-26,r:9,pull:62,to:{x:xc,y:200},msg:'블랙홀! 출발점으로',c:P.pu})}
+   if(T==='worm'){const p=at(s,.55);holes.push({x:p.x,y:p.y-24,r:7,pull:30,to:{x:dir>0?xa+40:xb-40,y:380+7*112-30},msg:'웜홀! 태양계로 직행',c:P.cy,fwd:true})}
+   if(T==='box'){box(s,at(s,.4).x)}
+   if(T==='mill'){const p=at(s,.5);mills.push({x:p.x,y:p.y-34,len:40,a:v,w:-dir*(2.4+v*.2),arms:3})}
+   if(T==='mill2'){const p=at(s,.5);mills.push({x:p.x,y:p.y-32,len:38,a:.5,w:-dir*2.8,arms:2})}
+   if(T==='spin'){const p=at(s,.5);spinners.push({x:p.x,y:p.y-30,len:80,a:v,w:-dir*2.6})}
+   if(T==='bump'){for(const f of [.3,.7]){const p=at(s,f),r=13+((k+v)%3);bumps.push({x:p.x,y:p.y-20-r,r,hit:-9})}}
+   dir=-dir}
+  // 마지막: 레인 가운데로 모으는 깔때기
+  S(xa,1566,xc-22,1596,LC[v]);S(xb,1566,xc+22,1596,LC[v])});
  stages.push({y:600,n:'STAGE 2 · 은하계'});
- S(RX,640,80,725,P.la);
- mills.push({x:740,y:615,len:42,a:0,w:2.6,arms:3});mills.push({x:470,y:641,len:42,a:1,w:2.2,arms:3});mills.push({x:230,y:667,len:38,a:.5,w:3,arms:2});
- const r2=S(L,830,900,905,P.la);box(r2,760);
- // 웜홀(약하게): 은하 뒷부분만 건너뛰어 태양계 입구로
- holes.push({x:450,y:858,r:7,pull:30,to:{x:150,y:1170},msg:'웜홀! 태양계로 직행',c:P.cy,fwd:true});
- pegField(40,200,760,2,32,26);
- S(RX,1010,80,1090,P.la);
- holes.push({x:560,y:1015,r:9,pull:65,to:{x:900,y:600},msg:'블랙홀! 은하 입구로',c:P.pu});
- boosts.push({x:800,y:1028,dir:-1});boosts.push({x:180,y:841,dir:1});boosts.push({x:880,y:647,dir:-1});boosts.push({x:300,y:1066,dir:-1});
- // ---------- 태양계 ----------
  stages.push({y:1140,n:'STAGE 3 · 태양계'});
- const r3=S(L,1185,900,1300,P.lg);box(r3,780);
- [[320,1188,16],[620,1225,18],[470,1150,14]].forEach(([x,y,r])=>bumps.push({x,y,r,hit:-9}));
- S(RX,1390,100,1500,P.lg);
- [[760,1383,15],[420,1422,17],[240,1395,13]].forEach(([x,y,r])=>bumps.push({x,y,r,hit:-9}));
- pads.push({x1:L,y1:1572,x2:95,y2:1555,kick:[260,-420],name:'점프대!'});
- meteorZone={x0:100,x1:900,y0:1130,y1:1560,next:3};
- // ---------- 하늘 ----------
+ meteorZone={x0:60,x1:940,y0:1130,y1:1560,next:3};
+ // 3 → 2 합류: 가운데 레인은 산 모양으로 반씩 나눔
+ S(500,1622,466,1648,P.wh);S(500,1622,534,1648,P.wh);
+ // ---------- 하늘(2레인) ----------
  stages.push({y:1640,n:'STAGE 4 · 하늘'});
- S(L,1650,440,1800,P.wh);S(RX,1650,560,1800,P.wh);
- S(500,1838,420,1895,P.wh);S(500,1838,580,1895,P.wh);
- belts.push({s:S(410,1935,120,1965,P.wh,'belt'),v:260});
- pegField(600,900,1910,5,34,26);
- S(L,2045,460,2140,P.wh);S(RX,2045,540,2140,P.wh);
- whirls.push({x:500,y:2188,r:44});
- const sb=S(L,2235,950,2300,P.wh,'belt');belts.push({s:sb,v:260});box(sb,700);
- pads.push({x1:330,y1:2262,x2:380,y2:2265,kick:[60,-330],cloud:true,name:'구름 점프대!'});
+ g2.forEach(([xa,xb],v)=>{const xc=(xa+xb)/2;let dir=v?1:-1;
+  for(let k=0;k<5;k++){const y=1700+k*122;const belt=k===0||k===3;const s=ramp(xa,xb,y,dir,48,P.wh,belt?'belt':'brick');if(belt)belts.push({s,v:250});
+   if(k===1){const p=at(s,v?.35:.6);pads.push({x1:p.x-22,y1:p.y-1,x2:p.x+22,y2:p.y+1,kick:[dir*70,-330],cloud:true,name:'구름 점프대!'})}
+   if(k===2){const gx=dir>0?xb-23:xa+23;whirls.push({x:gx,y:y+48+52,r:40})}
+   if(k===3)box(s,at(s,.45).x);
+   if(k===4){const p=at(s,.5);boosts.push({x:p.x,y:p.y-3,dir});pegField(xa+40,xb-40,y+90,3,40,26)}
+   dir=-dir}});
  lightning={next:10,last:0};web={next:16};bomb={next:12};
- // ---------- 땅속 ----------
+ // ---------- 땅속(2레인) ----------
  stages.push({y:2650,n:'STAGE 5 · 땅속'});
- cannons.push({x:960,y:2690,hold:[]});
- S(905,2640,905,2700,P.br);
- const pX=[150,300,450,600,750];
- S(L,2770,pX[0]-15,2798,P.br);for(let i=0;i<pX.length-1;i++){const a=pX[i]+15,b=pX[i+1]-15,m=(a+b)/2;S(a,2798,m,2782,P.br);S(m,2782,b,2798,P.br)}S(pX[4]+15,2798,RX,2770,P.br);
- const exits=[{x:200,y:2900},{x:500,y:2900},{x:800,y:2900}];
- const dests=[{fwd:1},{to:{x:500,y:2200},msg:'되돌이 관! 하늘로',back:true},{fwd:1},{to:{x:960,y:3560},msg:'지름길! 용암까지',fwd:true,shortcut:true},{fwd:1}];
- pX.forEach((x,i)=>pipes.push({x,y:2798,w:30,q:true,...dests[i]}));
- exits.forEach(e=>pipes.push({x:e.x,y:e.y,w:30,out:true}));
+ g2.forEach(([xa,xb],v)=>{const w=xb-xa,xc=(xa+xb)/2;const pX=[xa+w*.2,xa+w*.5,xa+w*.8];
+  S(xa,2770,pX[0]-15,2798,P.br);for(let i=0;i<2;i++){const a=pX[i]+15,c=pX[i+1]-15,m=(a+c)/2;S(a,2798,m,2782,P.br);S(m,2782,c,2798,P.br)}S(pX[2]+15,2798,xb,2770,P.br);
+  const D=[{fwd:1},{to:{x:xc,y:1700},msg:'되돌이 관! 하늘로',back:true},{to:{x:960,y:3560},msg:'지름길! 용암까지',fwd:true,shortcut:true}];const ord=v?[1,0,2]:[2,0,1];
+  pX.forEach((x,i)=>pipes.push({x,y:2798,w:30,q:true,lane:v,...D[ord[i]]}));
+  [xa+w*.3,xa+w*.7].forEach(x=>pipes.push({x,y:2900,w:30,out:true,lane:v}));
+  // 함정 문 경사
+  const dir=v?-1:1,x0=dir>0?xa:xb,x1=dir>0?xb-46:xa+46,y0=3010,y1=3070;for(let i=0;i<5;i++){const a=x0+(x1-x0)*i/5,c=x0+(x1-x0)*(i+1)/5,s=S(a,y0+(y1-y0)*i/5,c,y0+(y1-y0)*(i+1)/5,i%2?P.rd:P.br,i%2?'trapdoor':'brick');if(i%2)trapd.push({s,ph:i*.7+v*.4})}
+  {const p=x0+(x1-x0)*.5;boosts.push({x:p,y:y0+(y1-y0)*.5-3,dir})}
+  const cx0=dir>0?xa:xb,cx1=dir>0?xb-70:xa+70;S(cx0,3160,cx1,3200,P.br);pipes.push({x:dir>0?cx1-14:cx1+14,y:3199,w:30,to:{x:xc,y:2700},msg:'구덩이! 땅속 입구로',back:true,pit:true,lane:v})});
  stages.push({y:2960,n:'함정 문 주의!',sub:true});
- const ry0=3010,ry1=3090;const pts=[10,230,330,560,660,940];
- for(let i=0;i<pts.length-1;i++){const x1=pts[i],x2=pts[i+1],y1=ry0+(x1-10)/930*(ry1-ry0),y2=ry0+(x2-10)/930*(ry1-ry0);const s=S(x1,y1,x2,y2,i%2?P.rd:P.br,i%2?'trapdoor':'brick');if(i%2)trapd.push({s,ph:i*.7})}
- boosts.push({x:120,y:3018,dir:1});boosts.push({x:440,y:3044,dir:1});boosts.push({x:800,y:3076,dir:1});
- S(930,3095,930,3330,P.br);
- S(L,3170,900,3215,P.br);
- pipes.push({x:880,y:3214,w:34,to:{x:960,y:2690},msg:'구덩이! 대포로 다시',back:true,pit:true});
  // ---------- 용암 ----------
  stages.push({y:3460,n:'STAGE 6 · 용암'});
  const r6=S(RX,3585,80,3690,P.dk);box(r6,650);
@@ -150,6 +149,12 @@ function bossMove(t,dt){const p=bossPos(t);boss.vx=(p.x-boss.x)/dt;boss.vy=(p.y-
 const WB={r:9,cx:500,cy:GOAL_Y-56,ax:16,ay:12};
 function wbPos(t){const a=t*Math.PI;return{x:WB.cx+Math.cos(a)*WB.ax,y:WB.cy+Math.sin(a)*WB.ay}}
 function pistonExt(p,t){const q=((t+p.ph)%1.6+1.6)%1.6;if(q<1.0)return 0;if(q<1.08)return (q-1.0)/.08*p.max;if(q<1.35)return p.max;return p.max*(1-(q-1.35)/.25)}
+let START_N=24,START=null;
+// 레인 가운데 x(카메라용)
+function laneCX(x,y){if(y<1600)return x<335?172:x<665?500:828;if(y<3470)return x<500?255:745;return x}
+function laneZ(y){return y<1600?1:y<3470?.74:1}
+// 스타트존 크기: 칸 16px·줄 15px 격자에 공 수만큼, 맵 폭 안(최대 56칸)
+function startBox(n,xa=10,xb=990){const maxC=Math.floor((xb-xa-40)/16),cols=Math.max(Math.min(8,maxC),Math.min(maxC,Math.round(Math.sqrt(n)*1.4))),rows=Math.ceil(n/cols),w=cols*16+20,h=rows*15+16,cx=(xa+xb)/2;return{cols,rows,x0:cx-w/2,x1:cx+w/2,top:170-h,w,h,openT:Math.max(.35,Math.min(1.6,n/300))}}
 let YR={},SB=new Map(),PB=new Map(),SIDES=[],HSTEP=1/240;const NONE=[];
 let meteorZone=null,lightning=null,web=null,bomb=null;
 // 경기 정보(인트로·결과 기록): PRACTICE=연습 경기, RACE=다시보기·결과 기록
@@ -164,10 +169,10 @@ function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
 function parseLook(code,key){const h=hash(key||'x');const sp=(code||'').match(/p:([0-9a-g]{144})/);if(sp)return{c:0,f:0,h:0,spr:sp[1]};const m=(code||'').match(/c(\d+)f(\d+)h(\d+)/);return m?{c:+m[1]%BODY.length,f:+m[2]%FACES.length,h:+m[3]%HATS.length}:{c:h%BODY.length,f:(h>>4)%FACES.length,h:(h>>8)%HATS.length}}
 function makeBalls(list){
  balls=list.map((e,i)=>{const lk=parseLook(e.look,maskNick(e.id||'')+normJob(e.job));return{name:e.job,id:e.id||'',n:e.n||1,k:e.k||1,ids:e.ids||(e.id?[e.id]:[]),look:lk,c:lk.spr?sprMain(lk.spr):BODY[lk.c],spr:lk.spr?sprCanvas(lk.spr):null,x:0,y:0,vx:0,vy:0,r:MR,done:false,out:false,rank:0,rk:0,sy:0,st:0,tp:0,face:1,stun:0,light:0,trap:0,backUsed:false,shield:false,it:null,webT:0,bombT:0,wind:null,windDone:-9,spot:0}});
- const idx=balls.map((_,i)=>i).sort(()=>R()-.5);const cols=Math.max(12,Math.ceil(balls.length/8));const dx=Math.min(15,180/cols);
- idx.forEach((k,j)=>{const b=balls[k];b.x=410+(j%cols)*dx+(Math.floor(j/cols)%2?dx/2:0);b.y=160-MR-Math.floor(j/cols)*15});
+ const idx=balls.map((_,i)=>i).sort(()=>R()-.5);const BX=START?START.boxes:[startBox(balls.length)];
+ idx.forEach((k,j)=>{const b=balls[k],sb=BX[j%BX.length],q=Math.floor(j/BX.length),r=Math.floor(q/sb.cols),c=q%sb.cols;b.x=sb.x0+10+c*16+(r%2?4:0);b.y=170-9-r*15});
  leadCur=null;leadCand=null;leadN=0;leadShow=null;lastLeadAnn=-9;fin=[];winner=null;winT=-1;winVT=-1;finalT=-1;focus={b:null,until:0,msg:''};nextSpot=6;klog=[];photo=null;ending=null;elimShow=null;musicCut=false;
- const n=balls.length;elimCP=(!lastMode&&n>30)?[{y:2650,keep:Math.max(30,Math.ceil(n*.5))},{y:3460,keep:Math.max(20,Math.ceil(n*.25))}]:[];
+ const n=balls.length;elimCP=false?[{y:2650,keep:Math.max(30,Math.ceil(n*.5))},{y:3460,keep:Math.max(20,Math.ceil(n*.25))}]:[];
  HSTEP=n>150?1/120:1/240; // 공이 많으면 물리 계산 간격을 2배로(실시간 재생 유지)
  boss.max=boss.hp=n<=30?2:3;
 }
@@ -235,7 +240,7 @@ function stepSim(dt){
   // 시한폭탄: 앞쪽 무리 중 한 명에게 붙어 5초 뒤 폭발
   if(simT>bomb.next&&finalT<0){bomb.next=simT+14+R()*3;const pool=ordS.filter(b=>alive(b)&&!b.bombT&&!b.wind).slice(1,10);if(pool.length){const b=pool[Math.floor(R()*pool.length)];b.bombT=simT+5;sfx(880,.1,'square',.05);event(b,`시한폭탄이 ${nick(b)}에게! 5초 뒤 펑`,'bomb',false)}}}
  for(const b of balls)if(b.bombT&&simT>=b.bombT){b.bombT=0;if(alive(b))explode(b)}
- for(const b of balls){if(!alive(b))continue;
+ for(const b of balls){if(!alive(b)||simT<0)continue; // 출발 전엔 제자리
   // 역전 회오리: 붙잡혀 빙글빙글(앞 순위일수록 오래)
   if(b.wind){const w=b.wind,wh=whirls[0];w.a+=11*dt;const k=(simT-w.t0)/w.hold;const rad=wh.r*(.8-.45*Math.sin(Math.min(1,k)*Math.PI));b.x=wh.x+Math.cos(w.a)*rad;b.y=wh.y+Math.sin(w.a)*rad*.5-k*6;b.vx=0;b.vy=0;b.face=Math.cos(w.a)>0?-1:1;
    if(k>=1){b.wind=null;b.windDone=simT;const s=R()<.5?-1:1;b.vx=s*(240+R()*240);b.vy=-150;b.tp=simT;sfx(500,.2,'triangle',.04,-300)}continue}
@@ -245,7 +250,7 @@ function stepSim(dt){
   b.vy+=GRAV*dt;const sp=Math.hypot(b.vx,b.vy);if(sp>760){b.vx*=760/sp;b.vy*=760/sp}
   if(simT<b.webT){const k=1-5*dt;b.vx*=k;b.vy*=k}
   b.x+=b.vx*dt;b.y+=b.vy*dt;
-  const bk=Math.floor(b.y/32);for(const sd of SIDES)hitSeg(b,sd.x1,sd.y1,sd.x2,sd.y2,0,0,.28,2);for(const s of SB.get(bk)||NONE){if(s.kind==='trap'&&simT>0)continue;if(s.kind==='trapdoor'&&!s.on)continue;if(Math.max(s.y1,s.y2)+16<b.y||Math.min(s.y1,s.y2)-16>b.y)continue;if(Math.max(s.x1,s.x2)+16<b.x||Math.min(s.x1,s.x2)-16>b.x)continue;
+  const bk=Math.floor(b.y/32);for(const sd of SIDES)hitSeg(b,sd.x1,sd.y1,sd.x2,sd.y2,0,0,.28,2);for(const s of SB.get(bk)||NONE){if(s.kind==='trap'&&simT>s.open)continue;if(s.kind==='trapdoor'&&!s.on)continue;if(Math.max(s.y1,s.y2)+16<b.y||Math.min(s.y1,s.y2)-16>b.y)continue;if(Math.max(s.x1,s.x2)+16<b.x||Math.min(s.x1,s.x2)-16>b.x)continue;
    const h=hitSeg(b,s.x1,s.y1,s.x2,s.y2,0,0,s.kind==='belt'?.1:.28,2);
    if(h&&s.kind==='belt'){const bl=belts.find(q=>q.s===s);const len=Math.hypot(s.x2-s.x1,s.y2-s.y1),tx=(s.x2-s.x1)/len,ty=(s.y2-s.y1)/len;const vt=b.vx*tx+b.vy*ty;const dv=(bl.v-vt)*.22;b.vx+=dv*tx;b.vy+=dv*ty}}
   for(const p of PB.get(bk)||NONE){const dx=b.x-p.x,dy=b.y-p.y;if(Math.abs(dx)>16||Math.abs(dy)>16)continue;const d=Math.hypot(dx,dy),rr=b.r+p.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=p.x+nx*rr;b.y=p.y+ny*rr;const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.vx+=(nx>=0?1:-1)*(8+R()*22)}if(simT-p.hit>.15)tick(660+((p.x|0)%5)*110);p.hit=simT}}
@@ -284,7 +289,7 @@ function stepSim(dt){
   if(b.y>YR.hole[0]&&b.y<YR.hole[1])for(const hh of holes){if(!hh.fwd&&b.backUsed)continue;const dx=hh.x-b.x,dy=hh.y-b.y,d=Math.hypot(dx,dy);if(d<hh.pull&&simT-b.tp>1){const f=(1-d/hh.pull)*1600*dt;b.vx+=dx/d*f;b.vy+=dy/d*f;if(d<hh.r+b.r*.5){if(hh.fwd)teleport(b,hh.to,hh.msg,'fwd');else backTrap(b,hh.to,hh.msg,'hole')}}}
   // 관
   if(simT-b.tp>.8&&b.y>YR.pipe[0]&&b.y<YR.pipe[1]){for(const q of pipes){if(q.out)continue;if(Math.abs(b.x-q.x)<q.w/2&&b.y>q.y-10&&b.y<q.y+14){
-    const randOut=()=>{const outs=pipes.filter(o=>o.out);const o=outs[Math.floor(R()*outs.length)];b.x=o.x+(R()-.5)*6;b.y=o.y+16;b.vx=(R()-.5)*60;b.vy=120;b.tp=simT;sfx(220,.18,'square',.05,900)};
+    const randOut=()=>{const outs=pipes.filter(o=>o.out&&o.lane===q.lane);const o=outs[Math.floor(R()*outs.length)];b.x=o.x+(R()-.5)*6;b.y=o.y+16;b.vx=(R()-.5)*60;b.vy=120;b.tp=simT;sfx(220,.18,'square',.05,900)};
     if(q.back){if(b.backUsed){if(q.q)randOut();else continue}else backTrap(b,q.to,q.msg,'back')}
     else if(q.fwd&&!q.to)randOut();
     else teleport(b,q.to,q.msg,'fwd');break}}}
@@ -298,7 +303,7 @@ function stepSim(dt){
   if(b.x<L||b.x>RX){b.x=cl(b.x,L+10,RX-10)}
   if(Math.abs(b.vx)>8)b.face=b.vx>0?1:-1;
  }
- const BB=balls.filter(b=>alive(b)&&!b.wind).sort((a,c)=>a.y-c.y);for(let i=0;i<BB.length;i++){const a=BB[i];for(let k=i+1;k<BB.length;k++){const c=BB[k];const dy=c.y-a.y;if(dy>26)break;const dx=c.x-a.x;if(Math.abs(dx)>26)continue;const d=Math.hypot(dx,dy),rr=a.r+c.r;if(d<rr&&d>0){const ma=a.r*a.r,mc=c.r*c.r,wa=mc/(ma+mc),wc=ma/(ma+mc);const nx=dx/d,ny=dy/d,o=(rr-d);a.x-=nx*o*wa;a.y-=ny*o*wa;c.x+=nx*o*wc;c.y+=ny*o*wc;const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const j=-1.5*rv;a.vx-=j*wa*nx;a.vy-=j*wa*ny;c.vx+=j*wc*nx;c.vy+=j*wc*ny}}}}
+ const BB=simT<0?[]:balls.filter(b=>alive(b)&&!b.wind).sort((a,c)=>a.y-c.y);for(let i=0;i<BB.length;i++){const a=BB[i];for(let k=i+1;k<BB.length;k++){const c=BB[k];const dy=c.y-a.y;if(dy>26)break;const dx=c.x-a.x;if(Math.abs(dx)>26)continue;const d=Math.hypot(dx,dy),rr=a.r+c.r;if(d<rr&&d>0){const ma=a.r*a.r,mc=c.r*c.r,wa=mc/(ma+mc),wc=ma/(ma+mc);const nx=dx/d,ny=dy/d,o=(rr-d);a.x-=nx*o*wa;a.y-=ny*o*wa;c.x+=nx*o*wc;c.y+=ny*o*wc;const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const j=-1.5*rv;a.vx-=j*wa*nx;a.vy-=j*wa*ny;c.vx+=j*wc*nx;c.vy+=j*wc*ny}}}}
 }
 function onFinish(b){
  if(photo&&!photo.gap&&b===photo.c)photo.gap=Math.max(.01,b.doneT-winner.doneT);
@@ -347,15 +352,15 @@ function update(dt){
  if(ending&&VT-winVT>ending.cardIn+.5){slow=0;if(RACE&&!RACE.result)recordResult()} // 카드가 뜨면 물리 멈춤
  acc+=dt*slow*(simT<0?1:SPD);const h=HSTEP;let n=0;while(acc>=h&&n<24){stepSim(h);acc-=h;n++}
  let tx=cam.x,ty=cam.y,tz=1;
- if(simT<0){tx=500;ty=120}
+ if(simT<0){const sb=START;tz=Math.min(1,(W-16)/(sb.w+20),(H*.42)/(sb.h+20));tx=500;ty=sb.top+sb.h/2-(70/tz)} // 스타트존 전체가 화면 아래쪽에
  else if(winner){tx=500;ty=GOAL_Y-20;tz=1.5}
  else if(!live.length){ty=GOAL_Y}
  else if(phase()==='late'){const a=lastMode?live[live.length-1]:live[0],b=lastMode?(live[live.length-2]||a):(live[1]||a);ty=a.y*.6+b.y*.4;tx=a.x*.6+b.x*.4;tz=1.45;if(!lastMode&&boss.dead<0&&Math.abs(a.y-boss.y)<160){tx=a.x*.5+boss.x*.5;ty=a.y*.5+boss.y*.5;tz=1.3}}
  else if(focus.b&&simT<focus.until&&alive(focus.b)){tx=focus.b.x;ty=focus.b.y;tz=1.25}
- else if(phase()==='early'){const a=live[0],m=live[Math.floor(live.length/2)];tx=a.x*.5+m.x*.5;ty=a.y*.55+m.y*.45+20;tz=.78}
- else{const a=live[0],b=live[Math.min(2,live.length-1)];tx=a.x*.7+b.x*.3;ty=a.y*.75+b.y*.25+30}
+ else if(phase()==='early'){const a=live[0];tx=laneCX(a.x,a.y);ty=a.y+40;tz=laneZ(a.y)*.92}
+ else{const a=live[0],b=live[Math.min(2,live.length-1)];const cx=laneCX(a.x,a.y);tx=a.y<3470?cx:a.x*.7+b.x*.3;ty=a.y*.85+(laneCX(b.x,b.y)===cx?b.y:a.y)*.15+30;tz=laneZ(a.y)}
  if(FIND.b&&FIND.cam&&!winner&&simT>0&&alive(FIND.b)){tx=FIND.b.x;ty=FIND.b.y;tz=1.3}
  if(window.camF&&!winner&&simT>-1){const c=window.camF;if(alive(c)){tx=c.x;ty=c.y;tz=c.z||1.3}}
- const hw=W*.5/tz;tx=cl(tx,hw,WW-hw);ty=cl(ty,120,GOAL_Y+60);
+ const hw=W*.5/tz;tx=cl(tx,hw,WW-hw);ty=cl(ty,simT<0?-400:120,GOAL_Y+60);
  const f=Math.min(1,dt*(phase()==='late'?4:3.2));cam.x+=(tx-cam.x)*f;cam.y+=(ty-cam.y)*f;cam.z+=(tz-cam.z)*Math.min(1,dt*2.5);
 }
