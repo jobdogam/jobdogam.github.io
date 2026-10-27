@@ -14,7 +14,18 @@ const cl=(x,a,b)=>Math.max(a,Math.min(b,x));
 const cv=document.getElementById('cv'),g=cv.getContext('2d');g.imageSmoothingEnabled=false;
 const QS=new URLSearchParams(location.search);
 const seedRand=s=>{s=Math.max(1,s|0);return()=>(s=(s*16807)%2147483647)/2147483647};
-let R=Math.random,VR=seedRand(77); // R=경기(물리·연출 결정), VR=그림 전용
+let R=Math.random,VR=seedRand(77),CR=seedRand(31); // R=경기(물리 결정), CR=카메라 연출(update 안에서만), VR=그림 전용
+// v4(10/27): 경기에 쓰는 삼각함수·거리는 사칙연산+sqrt로 직접 계산 — Math.sin/cos/atan2/hypot은 엔진·버전마다 마지막 자리가 달라 경기가 갈림
+const PIO2_1=1.57079632673412561417e+00,PIO2_2=6.07710050630396597660e-11,PIO2_3=2.02226624871116645580e-21,TWO_PI_INV=2/Math.PI;
+function trigK(x){const k=Math.round(x*TWO_PI_INV);return[k,((x-k*PIO2_1)-k*PIO2_2)-k*PIO2_3]}
+const kSin=r=>{const z=r*r;return r+r*z*(-1.66666666666666324348e-01+z*(8.33333333332248946124e-03+z*(-1.98412698298579493134e-04+z*(2.75573137070700676789e-06+z*(-2.50507602534068634195e-08+z*1.58969099521155010221e-10)))))};
+const kCos=r=>{const z=r*r;return 1-.5*z+z*z*(4.16666666666666019037e-02+z*(-1.38888888888741095749e-03+z*(2.48015872894767294178e-05+z*(-2.75573143513906633035e-07+z*(2.08757232129817482790e-09+z*-1.13596475577881948265e-11)))))};
+function dsin(x){const [k,r]=trigK(x),q=((k%4)+4)%4;return q===0?kSin(r):q===1?kCos(r):q===2?-kSin(r):-kCos(r)}
+function dcos(x){const [k,r]=trigK(x),q=((k%4)+4)%4;return q===0?kCos(r):q===1?-kSin(r):q===2?-kCos(r):kSin(r)}
+function datan(x){if(x<0)return -datan(-x);let y=0;if(x>2.414213562373095){y=Math.PI/2;x=-1/x}else if(x>.4142135623730950){y=Math.PI/4;x=(x-1)/(x+1)}
+ const z=x*x,p=(((-8.750608600031904122785e-1*z-1.615753718733365076637e1)*z-7.500855792314704667340e1)*z-1.228866684490136173410e2)*z-6.485021904942025371773e1,q=((((z+2.485846490142306297962e1)*z+1.650270098316988542046e2)*z+4.328810604912902668951e2)*z+4.853903996359136964868e2)*z+1.945506571482613964425e2;return y+(x*z*p/q+x)}
+function datan2(y,x){if(x>0)return datan(y/x);if(x<0)return datan(y/x)+(y>=0?Math.PI:-Math.PI);return y>0?Math.PI/2:y<0?-Math.PI/2:0}
+const dhyp=(a,b)=>Math.sqrt(a*a+b*b);
 function fit(){const s=Math.min(innerWidth/W,innerHeight/H);cv.style.width=W*s+'px';cv.style.height=H*s+'px'}addEventListener('resize',fit);fit();
 
 // ================= 8비트 음악·효과음 =================
@@ -143,11 +154,11 @@ function build(){
  boss={x:200,y:4500,vx:0,vy:0,r:30,hp:16,max:16,hit:-9,dead:-1,land:0};bossMove(0,1/240);boss.vx=boss.vy=0;
 }
 // 보스: 깔때기 왼쪽 벽을 따라 왔다 갔다, 가끔 점프(그 밑으로 지나갈 수 있음)
-function bossPos(t){const x=150+(Math.sin(t*.8)+1)*95;const wy=4480+(x-10)*300/448;const ph=((t%2.2)+2.2)%2.2;const hop=ph<.85?Math.sin(ph/.85*Math.PI)*64:0;return{x,y:wy-40-hop,air:ph<.85}}
+function bossPos(t){const x=150+(dsin(t*.8)+1)*95;const wy=4480+(x-10)*300/448;const ph=((t%2.2)+2.2)%2.2;const hop=ph<.85?dsin(ph/.85*Math.PI)*64:0;return{x,y:wy-40-hop,air:ph<.85}}
 function bossMove(t,dt){const p=bossPos(t);boss.vx=(p.x-boss.x)/dt;boss.vy=(p.y-boss.y)/dt;boss.x=p.x;boss.y=p.y;if(boss.wasAir&&!p.air&&boss.dead<0&&Math.abs(boss.y-cam.y)<400){sfx(70,.18,'square',.07,-30);boss.land=simT}boss.wasAir=p.air}
 // 역풍 범퍼: 골 입구 앞을 작은 원으로 공전(한 바퀴 2초), 공마다 1번만 약하게 튕김
 const WB={r:9,cx:500,cy:GOAL_Y-56,ax:16,ay:12};
-function wbPos(t){const a=t*Math.PI;return{x:WB.cx+Math.cos(a)*WB.ax,y:WB.cy+Math.sin(a)*WB.ay}}
+function wbPos(t){const a=t*Math.PI;return{x:WB.cx+dcos(a)*WB.ax,y:WB.cy+dsin(a)*WB.ay}}
 function pistonExt(p,t){const q=((t+p.ph)%1.6+1.6)%1.6;if(q<1.0)return 0;if(q<1.08)return (q-1.0)/.08*p.max;if(q<1.35)return p.max;return p.max*(1-(q-1.35)/.25)}
 let START_N=24,START=null;
 // 레인 가운데 x(카메라용)
@@ -195,7 +206,7 @@ const alive=b=>!b.done&&!b.out;
 // ================= 물리 =================
 function hitSeg(b,x1,y1,x2,y2,vxw,vyw,rest,th){
  const dx=x2-x1,dy=y2-y1,l2=dx*dx+dy*dy;let t=((b.x-x1)*dx+(b.y-y1)*dy)/l2;t=cl(t,0,1);
- const px=x1+dx*t,py=y1+dy*t,ox=b.x-px,oy=b.y-py,d=Math.hypot(ox,oy),rr=b.r+(th||2);
+ const px=x1+dx*t,py=y1+dy*t,ox=b.x-px,oy=b.y-py,d=dhyp(ox,oy),rr=b.r+(th||2);
  if(d<rr&&d>1e-6){const nx=ox/d,ny=oy/d;b.x=px+nx*rr;b.y=py+ny*rr;const rvx=b.vx-(vxw||0),rvy=b.vy-(vyw||0),vn=rvx*nx+rvy*ny;
   if(vn<0){b.vx-=(1+rest)*vn*nx;b.vy-=(1+rest)*vn*ny}return {nx,ny}}
  return null}
@@ -216,14 +227,14 @@ const ITEMS={rocket:['로켓!',1.1],shield:['방패!',0],magnet:['자석!',4],gi
 function giveItem(b){const k=['rocket','shield','magnet','giant'][Math.floor(R()*4)];if(k==='shield')b.shield=true;else b.it={k,until:simT+ITEMS[k][1]};pops.push({x:b.x,y:b.y-18,t:simT,s:ITEMS[k][0]});sfx(1046,.07,'square',.05,600);later(.07,()=>sfx(1568,.09,'square',.04));
  if(b.rk<=6||balls.length<=12)event(b,`${nick(b)} 아이템 ${ITEMS[k][0]}`,'item',false)}
 function explode(b){booms.push({x:b.x,y:b.y,t:simT});nz(.6,.16,300);sfx(90,.5,'sawtooth',.08,-60);
- for(const c of balls){if(c===b||!alive(c)||c.wind)continue;const dx=c.x-b.x,dy=c.y-b.y,d=Math.hypot(dx,dy);if(d<95&&d>0){const f=1-d/95;c.vx+=dx/d*560*f;c.vy+=dy/d*480*f-280*f;if(f>.35)c.trap++}}
+ for(const c of balls){if(c===b||!alive(c)||c.wind)continue;const dx=c.x-b.x,dy=c.y-b.y,d=dhyp(dx,dy);if(d<95&&d>0){const f=1-d/95;c.vx+=dx/d*560*f;c.vy+=dy/d*480*f-280*f;if(f>.35)c.trap++}}
  if(!guard(b,'폭탄')){b.vy=-460;b.vx=(R()-.5)*520;b.trap++}
  event(b,`쾅! ${nick(b)} 시한폭탄 폭발`,'bomb',false)}
 function stepSim(dt){
  simT+=dt;
  const ordS=rankOrder();ordS.forEach((b,i)=>b.rk=i+1);
  for(const m of mills)m.a+=m.w*dt;for(const w of wheels)w.a+=w.w*dt;for(const s of spinners)s.a+=s.w*dt;
- for(const p of pends)p.ang=Math.sin(simT*p.sp+p.ph)*p.amp;
+ for(const p of pends)p.ang=dsin(simT*p.sp+p.ph)*p.amp;
  for(const t of trapd)t.s.on=((simT+t.ph)%2.4)>.6;
  for(const p of pistons){const e=pistonExt(p,simT);p.v=(e-(p.ext||0))/dt;p.ext=e}
  if(boss.dead<0)bossMove(simT,dt);else{boss.y+=boss.vy*dt;boss.vy+=500*dt}
@@ -243,51 +254,51 @@ function stepSim(dt){
  for(const b of balls)if(b.bombT&&simT>=b.bombT){b.bombT=0;if(alive(b))explode(b)}
  for(const b of balls){if(!alive(b)||simT<0)continue; // 출발 전엔 제자리
   // 역전 회오리: 붙잡혀 빙글빙글(앞 순위일수록 오래)
-  if(b.wind){const w=b.wind,wh=whirls[0];w.a+=11*dt;const k=(simT-w.t0)/w.hold;const rad=wh.r*(.8-.45*Math.sin(Math.min(1,k)*Math.PI));b.x=wh.x+Math.cos(w.a)*rad;b.y=wh.y+Math.sin(w.a)*rad*.5-k*6;b.vx=0;b.vy=0;b.face=Math.cos(w.a)>0?-1:1;
+  if(b.wind){const w=b.wind,wh=whirls[0];w.a+=11*dt;const k=(simT-w.t0)/w.hold;const rad=wh.r*(.8-.45*dsin(Math.min(1,k)*Math.PI));b.x=wh.x+dcos(w.a)*rad;b.y=wh.y+dsin(w.a)*rad*.5-k*6;b.vx=0;b.vy=0;b.face=dcos(w.a)>0?-1:1;
    if(k>=1){b.wind=null;b.windDone=simT;const s=R()<.5?-1:1;b.vx=s*(240+R()*240);b.vy=-150;b.tp=simT;sfx(500,.2,'triangle',.04,-300)}continue}
   const it=b.it&&simT<b.it.until?b.it.k:null;if(b.it&&!it)b.it=null;
   b.r=it==='giant'?MR*1.7:MR;
   if(it==='rocket'){b.vy+=1000*dt;b.vx+=b.face*520*dt}
-  b.vy+=GRAV*dt;const sp=Math.hypot(b.vx,b.vy);if(sp>760){b.vx*=760/sp;b.vy*=760/sp}
+  b.vy+=GRAV*dt;const sp=dhyp(b.vx,b.vy);if(sp>760){b.vx*=760/sp;b.vy*=760/sp}
   if(simT<b.webT){const k=1-5*dt;b.vx*=k;b.vy*=k}
   b.x+=b.vx*dt;b.y+=b.vy*dt;
   const bk=Math.floor(b.y/32);for(const sd of SIDES)hitSeg(b,sd.x1,sd.y1,sd.x2,sd.y2,0,0,.28,2);for(const s of SB.get(bk)||NONE){if(s.kind==='trap'&&simT>s.open)continue;if(s.kind==='trapdoor'&&!s.on)continue;if(Math.max(s.y1,s.y2)+16<b.y||Math.min(s.y1,s.y2)-16>b.y)continue;if(Math.max(s.x1,s.x2)+16<b.x||Math.min(s.x1,s.x2)-16>b.x)continue;
    const h=hitSeg(b,s.x1,s.y1,s.x2,s.y2,0,0,s.kind==='belt'?.1:.28,2);
-   if(h&&s.kind==='belt'){const bl=belts.find(q=>q.s===s);const len=Math.hypot(s.x2-s.x1,s.y2-s.y1),tx=(s.x2-s.x1)/len,ty=(s.y2-s.y1)/len;const vt=b.vx*tx+b.vy*ty;const dv=(bl.v-vt)*.22;b.vx+=dv*tx;b.vy+=dv*ty}}
-  for(const p of PB.get(bk)||NONE){const dx=b.x-p.x,dy=b.y-p.y;if(Math.abs(dx)>16||Math.abs(dy)>16)continue;const d=Math.hypot(dx,dy),rr=b.r+p.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=p.x+nx*rr;b.y=p.y+ny*rr;const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.vx+=(nx>=0?1:-1)*(8+R()*22)}if(simT-p.hit>.15)tick(660+((p.x|0)%5)*110);p.hit=simT}}
-  if(b.y>YR.bump[0]&&b.y<YR.bump[1])for(const q of bumps){const dx=b.x-q.x,dy=b.y-q.y,d=Math.hypot(dx,dy),rr=b.r+q.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=q.x+nx*rr;b.y=q.y+ny*rr;const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=2.1*vn*nx;b.vy-=2.1*vn*ny;b.vx+=nx*130;b.vy+=ny*130;if(simT-q.hit>.12){pops.push({x:q.x,y:q.y-q.r-6,t:simT,s:'+100'});sfx(880,.07,'square',.05,400)}q.hit=simT}}}
+   if(h&&s.kind==='belt'){const bl=belts.find(q=>q.s===s);const len=dhyp(s.x2-s.x1,s.y2-s.y1),tx=(s.x2-s.x1)/len,ty=(s.y2-s.y1)/len;const vt=b.vx*tx+b.vy*ty;const dv=(bl.v-vt)*.22;b.vx+=dv*tx;b.vy+=dv*ty}}
+  for(const p of PB.get(bk)||NONE){const dx=b.x-p.x,dy=b.y-p.y;if(Math.abs(dx)>16||Math.abs(dy)>16)continue;const d=dhyp(dx,dy),rr=b.r+p.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=p.x+nx*rr;b.y=p.y+ny*rr;const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.vx+=(nx>=0?1:-1)*(8+R()*22)}if(simT-p.hit>.15)tick(660+((p.x|0)%5)*110);p.hit=simT}}
+  if(b.y>YR.bump[0]&&b.y<YR.bump[1])for(const q of bumps){const dx=b.x-q.x,dy=b.y-q.y,d=dhyp(dx,dy),rr=b.r+q.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=q.x+nx*rr;b.y=q.y+ny*rr;const vn=b.vx*nx+b.vy*ny;if(vn<0){b.vx-=2.1*vn*nx;b.vy-=2.1*vn*ny;b.vx+=nx*130;b.vy+=ny*130;if(simT-q.hit>.12){pops.push({x:q.x,y:q.y-q.r-6,t:simT,s:'+100'});sfx(880,.07,'square',.05,400)}q.hit=simT}}}
   if(b.y>YR.pad[0]&&b.y<YR.pad[1])for(const p of pads){const h=hitSeg(b,p.x1,p.y1,p.x2,p.y2,0,0,.2,3);if(h&&h.ny<0){b.vy=p.kick[1]-R()*60;b.vx=p.kick[0]+(R()-.5)*60;if(simT-(p.hit||-9)>.3)pops.push({x:(p.x1+p.x2)/2,y:p.y1-22,t:simT,s:p.name});p.hit=simT;sfx(330,.12,'square',.05,700)}}
-  if(b.y>YR.mill[0]&&b.y<YR.mill[1])for(const m of mills)for(let k=0;k<m.arms;k++){const a=m.a+k*Math.PI*2/m.arms,x2=m.x+Math.cos(a)*m.len,y2=m.y+Math.sin(a)*m.len;if(Math.abs(b.x-m.x)>m.len+14||Math.abs(b.y-m.y)>m.len+14)continue;const dx=x2-m.x,dy=y2-m.y;let t=cl(((b.x-m.x)*dx+(b.y-m.y)*dy)/(dx*dx+dy*dy),0,1);hitSeg(b,m.x,m.y,x2,y2,-m.w*dy*t,m.w*dx*t,.35,3)}
-  if(b.y>YR.spin[0]&&b.y<YR.spin[1])for(const s of spinners){const ca=Math.cos(s.a)*s.len/2,sa=Math.sin(s.a)*s.len/2;if(Math.abs(b.x-s.x)>s.len||Math.abs(b.y-s.y)>s.len)continue;const x1=s.x-ca,y1=s.y-sa,x2=s.x+ca,y2=s.y+sa;const dx=x2-x1,dy=y2-y1;let t=cl(((b.x-x1)*dx+(b.y-y1)*dy)/(dx*dx+dy*dy),0,1);const px=x1+dx*t-s.x,py=y1+dy*t-s.y;hitSeg(b,x1,y1,x2,y2,-s.w*py,s.w*px,.45,3)}
-  if(b.y>YR.wheel[0]&&b.y<YR.wheel[1])for(const w of wheels){if(Math.abs(b.x-w.x)>w.r+16||Math.abs(b.y-w.y)>w.r+16)continue;for(let k=0;k<w.n;k++){if(w.gaps.includes(k))continue;const a1=w.a+k/w.n*6.283,a2=w.a+(k+1)/w.n*6.283;const x1=w.x+Math.cos(a1)*w.r,y1=w.y+Math.sin(a1)*w.r,x2=w.x+Math.cos(a2)*w.r,y2=w.y+Math.sin(a2)*w.r;const mx=(x1+x2)/2-w.x,my=(y1+y2)/2-w.y;hitSeg(b,x1,y1,x2,y2,-w.w*my,w.w*mx,.3,2)}
-   const dx=b.x-w.x,dy=b.y-w.y,d=Math.hypot(dx,dy);if(d<b.r+12&&d>0){b.x=w.x+dx/d*(b.r+12);b.y=w.y+dy/d*(b.r+12);const vn=b.vx*dx/d+b.vy*dy/d;if(vn<0){b.vx-=1.4*vn*dx/d;b.vy-=1.4*vn*dy/d}}}
-  if(b.y>YR.pend[0]&&b.y<YR.pend[1])for(const p of pends){const x2=p.x+Math.sin(p.ang)*p.len,y2=p.y+Math.cos(p.ang)*p.len;const om=Math.cos(simT*p.sp+p.ph)*p.amp*p.sp;const dx=b.x-x2,dy=b.y-y2,d=Math.hypot(dx,dy);
-   if(d<b.r+13&&d>0){const nx=dx/d,ny=dy/d;b.x=x2+nx*(b.r+13);b.y=y2+ny*(b.r+13);const hvx=om*Math.cos(p.ang)*p.len,hvy=-om*Math.sin(p.ang)*p.len;const rvx=b.vx-hvx,rvy=b.vy-hvy,vn=rvx*nx+rvy*ny;if(vn<0){b.vx-=1.7*vn*nx;b.vy-=1.7*vn*ny;if(simT-(p.hit||0)>.2){sfx(160,.1,'square',.06,-60);pops.push({x:x2,y:y2-18,t:simT,s:'쾅!'})}p.hit=simT}}}
+  if(b.y>YR.mill[0]&&b.y<YR.mill[1])for(const m of mills)for(let k=0;k<m.arms;k++){const a=m.a+k*Math.PI*2/m.arms,x2=m.x+dcos(a)*m.len,y2=m.y+dsin(a)*m.len;if(Math.abs(b.x-m.x)>m.len+14||Math.abs(b.y-m.y)>m.len+14)continue;const dx=x2-m.x,dy=y2-m.y;let t=cl(((b.x-m.x)*dx+(b.y-m.y)*dy)/(dx*dx+dy*dy),0,1);hitSeg(b,m.x,m.y,x2,y2,-m.w*dy*t,m.w*dx*t,.35,3)}
+  if(b.y>YR.spin[0]&&b.y<YR.spin[1])for(const s of spinners){const ca=dcos(s.a)*s.len/2,sa=dsin(s.a)*s.len/2;if(Math.abs(b.x-s.x)>s.len||Math.abs(b.y-s.y)>s.len)continue;const x1=s.x-ca,y1=s.y-sa,x2=s.x+ca,y2=s.y+sa;const dx=x2-x1,dy=y2-y1;let t=cl(((b.x-x1)*dx+(b.y-y1)*dy)/(dx*dx+dy*dy),0,1);const px=x1+dx*t-s.x,py=y1+dy*t-s.y;hitSeg(b,x1,y1,x2,y2,-s.w*py,s.w*px,.45,3)}
+  if(b.y>YR.wheel[0]&&b.y<YR.wheel[1])for(const w of wheels){if(Math.abs(b.x-w.x)>w.r+16||Math.abs(b.y-w.y)>w.r+16)continue;for(let k=0;k<w.n;k++){if(w.gaps.includes(k))continue;const a1=w.a+k/w.n*6.283,a2=w.a+(k+1)/w.n*6.283;const x1=w.x+dcos(a1)*w.r,y1=w.y+dsin(a1)*w.r,x2=w.x+dcos(a2)*w.r,y2=w.y+dsin(a2)*w.r;const mx=(x1+x2)/2-w.x,my=(y1+y2)/2-w.y;hitSeg(b,x1,y1,x2,y2,-w.w*my,w.w*mx,.3,2)}
+   const dx=b.x-w.x,dy=b.y-w.y,d=dhyp(dx,dy);if(d<b.r+12&&d>0){b.x=w.x+dx/d*(b.r+12);b.y=w.y+dy/d*(b.r+12);const vn=b.vx*dx/d+b.vy*dy/d;if(vn<0){b.vx-=1.4*vn*dx/d;b.vy-=1.4*vn*dy/d}}}
+  if(b.y>YR.pend[0]&&b.y<YR.pend[1])for(const p of pends){const x2=p.x+dsin(p.ang)*p.len,y2=p.y+dcos(p.ang)*p.len;const om=dcos(simT*p.sp+p.ph)*p.amp*p.sp;const dx=b.x-x2,dy=b.y-y2,d=dhyp(dx,dy);
+   if(d<b.r+13&&d>0){const nx=dx/d,ny=dy/d;b.x=x2+nx*(b.r+13);b.y=y2+ny*(b.r+13);const hvx=om*dcos(p.ang)*p.len,hvy=-om*dsin(p.ang)*p.len;const rvx=b.vx-hvx,rvy=b.vy-hvy,vn=rvx*nx+rvy*ny;if(vn<0){b.vx-=1.7*vn*nx;b.vy-=1.7*vn*ny;if(simT-(p.hit||0)>.2){sfx(160,.1,'square',.06,-60);pops.push({x:x2,y:y2-18,t:simT,s:'쾅!'})}p.hit=simT}}}
   // 피스톤(결승선 앞)
   for(const p of pistons){if(Math.abs(b.y-p.y)>24)continue;const bx=p.side<0?funL(p.y):funR(p.y),tip=bx-p.side*p.ext;const x0=Math.min(bx,tip),x1=Math.max(bx,tip);
    hitSeg(b,x0,p.y-9,x1,p.y-9,0,0,.3,2);hitSeg(b,x0,p.y+9,x1,p.y+9,0,0,.3,2);const h=hitSeg(b,tip,p.y-9,tip,p.y+9,-p.side*Math.max(0,p.v),0,.5,2);if(h&&p.v>50&&simT-(p.hit||-9)>.3){p.hit=simT;sfx(140,.12,'square',.06,200);pops.push({x:tip,y:p.y-20,t:simT,s:'퍽!'})}}
   // 역풍 범퍼
-  if(!b.bumpUsed&&b.y>WB.cy-40&&b.y<WB.cy+40){const q=wbPos(simT),dx=b.x-q.x,dy=b.y-q.y,d=Math.hypot(dx,dy);if(d<b.r+WB.r&&d>0){b.bumpUsed=true;const sd=dx>=0?1:-1;b.x=q.x+dx/d*(b.r+WB.r+1);b.y=q.y+dy/d*(b.r+WB.r+1);b.vy=-170;b.vx=sd*110;WB.hit=simT;pops.push({x:q.x,y:q.y-18,t:simT,s:'튕김!'});sfx(660,.14,'sine',.08,320);klog.push({t:VT,msg:`튕김! ${nick(b)}`,kind:'bump'});if(klog.length>6)klog.shift()}}
+  if(!b.bumpUsed&&b.y>WB.cy-40&&b.y<WB.cy+40){const q=wbPos(simT),dx=b.x-q.x,dy=b.y-q.y,d=dhyp(dx,dy);if(d<b.r+WB.r&&d>0){b.bumpUsed=true;const sd=dx>=0?1:-1;b.x=q.x+dx/d*(b.r+WB.r+1);b.y=q.y+dy/d*(b.r+WB.r+1);b.vy=-170;b.vx=sd*110;WB.hit=simT;pops.push({x:q.x,y:q.y-18,t:simT,s:'튕김!'});sfx(660,.14,'sine',.08,320);klog.push({t:VT,msg:`튕김! ${nick(b)}`,kind:'bump'});if(klog.length>6)klog.shift()}}
   // 보스
-  if(boss.dead<0){const dx=b.x-boss.x,dy=b.y-boss.y,d=Math.hypot(dx,dy),rr=b.r+boss.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=boss.x+nx*rr;b.y=boss.y+ny*rr;const rvx=b.vx-boss.vx,rvy=b.vy-boss.vy,vn=rvx*nx+rvy*ny;
+  if(boss.dead<0){const dx=b.x-boss.x,dy=b.y-boss.y,d=dhyp(dx,dy),rr=b.r+boss.r;if(d<rr&&d>0){const nx=dx/d,ny=dy/d;b.x=boss.x+nx*rr;b.y=boss.y+ny*rr;const rvx=b.vx-boss.vx,rvy=b.vy-boss.vy,vn=rvx*nx+rvy*ny;
    if(vn<0){b.vx-=1.5*vn*nx;b.vy-=1.5*vn*ny;b.vx+=nx*60;b.vy+=ny*60-40;
     if(simT-(b.bossHit||-9)>.3&&vn<-10){b.bossHit=simT;boss.hp--;boss.hit=simT;pops.push({x:boss.x+(R()-.5)*30,y:boss.y-40,t:simT,s:'-1'});sfx(220,.08,'square',.06,-120);
      if(boss.hp<=0){boss.dead=simT;boss.vy=-200;booms.push({x:boss.x,y:boss.y,t:simT,big:1});nz(.9,.18,200);sfx(60,.8,'sawtooth',.09,-30);pops.push({x:boss.x,y:boss.y-50,t:simT,s:'보스 격파!'});event(b,`${nick(b)} 보스 격파!`,'boss')}}}}}
-  for(const p of plats){const x=p.x0+Math.sin(simT*p.sp+p.ph)*p.amp,v=Math.cos(simT*p.sp+p.ph)*p.amp*p.sp;const h=hitSeg(b,x-p.w/2,p.y,x+p.w/2,p.y,v,0,.25,3);if(h&&h.ny<-.5)b.vx+=(v-b.vx)*.2}
-  for(const m of meteors){const dx=b.x-m.x,dy=b.y-m.y,d=Math.hypot(dx,dy);if(d<b.r+m.r&&d>0){b.vx+=dx/d*380+m.vx;b.vy+=dy/d*300-120;m.y=99999;pops.push({x:b.x,y:b.y-16,t:simT,s:'운석!'});sfx(120,.25,'sawtooth',.06,-80);nz(.25,.08,600)}}
+  for(const p of plats){const x=p.x0+dsin(simT*p.sp+p.ph)*p.amp,v=dcos(simT*p.sp+p.ph)*p.amp*p.sp;const h=hitSeg(b,x-p.w/2,p.y,x+p.w/2,p.y,v,0,.25,3);if(h&&h.ny<-.5)b.vx+=(v-b.vx)*.2}
+  for(const m of meteors){const dx=b.x-m.x,dy=b.y-m.y,d=dhyp(dx,dy);if(d<b.r+m.r&&d>0){b.vx+=dx/d*380+m.vx;b.vy+=dy/d*300-120;m.y=99999;pops.push({x:b.x,y:b.y-16,t:simT,s:'운석!'});sfx(120,.25,'sawtooth',.06,-80);nz(.25,.08,600)}}
   if(b.y>YR.boost[0]&&b.y<YR.boost[1])for(const q of boosts){if(Math.abs(b.x-q.x)<16&&Math.abs(b.y-q.y)<14){b.vx+=q.dir*900*dt*4;if(simT-(q.hit||0)>.25){sfx(988,.08,'square',.04,500)}q.hit=simT}}
   if(b.y>YR.gey[0]&&b.y<YR.gey[1])for(const q of geys){const on=((simT+q.ph)%3.2)<.6;if(on&&Math.abs(b.x-q.x)<q.w/2&&b.y>q.y-60&&b.y<q.y+6){b.vy=-430;b.vx+=(R()-.5)*120;if(simT-(q.hit||0)>.3){sfx(90,.3,'sawtooth',.05,300);pops.push({x:q.x,y:q.y-40,t:simT,s:'펑!'})}q.hit=simT}}
   // 아이템 상자
   for(const q of boxes){if(simT-q.t<2.5)continue;if(Math.abs(b.x-q.x)<12&&Math.abs(b.y-q.y)<14){q.t=simT;giveItem(b)}}
   // 자석: 주변 공 끌어당김
-  if(it==='magnet'){for(const c of balls){if(c===b||!alive(c)||c.wind)continue;const dx=b.x-c.x,dy=b.y-c.y,d=Math.hypot(dx,dy);if(d<100&&d>b.r+c.r){const f=(1-d/100)*900*dt;c.vx+=dx/d*f;c.vy+=dy/d*f}}}
+  if(it==='magnet'){for(const c of balls){if(c===b||!alive(c)||c.wind)continue;const dx=b.x-c.x,dy=b.y-c.y,d=dhyp(dx,dy);if(d<100&&d>b.r+c.r){const f=(1-d/100)*900*dt;c.vx+=dx/d*f;c.vy+=dy/d*f}}}
   // 회오리 진입
-  if(b.y>YR.whirl[0]&&b.y<YR.whirl[1])for(const wh of whirls){if(simT-b.windDone>2.5&&Math.hypot(b.x-wh.x,(b.y-wh.y)*1.6)<wh.r){const hold=b.rk<=3?1.9:b.rk<=8?1.0:.45;b.wind={t0:simT,hold,a:Math.atan2(b.y-wh.y,b.x-wh.x)};sfx(400,.3,'triangle',.04,400);if(b.rk===1)event(b,`역전 회오리! 1등 ${nick(b)} 붙잡힘`,'wind');}}
+  if(b.y>YR.whirl[0]&&b.y<YR.whirl[1])for(const wh of whirls){if(simT-b.windDone>2.5&&dhyp(b.x-wh.x,(b.y-wh.y)*1.6)<wh.r){const hold=b.rk<=3?1.9:b.rk<=8?1.0:.45;b.wind={t0:simT,hold,a:datan2(b.y-wh.y,b.x-wh.x)};sfx(400,.3,'triangle',.04,400);if(b.rk===1)event(b,`역전 회오리! 1등 ${nick(b)} 붙잡힘`,'wind');}}
   // 대포
   if(b.y>YR.cannon[0]&&b.y<YR.cannon[1])for(const c of cannons){if(!b.cann&&simT-b.tp>1&&Math.abs(b.x-c.x)<22&&Math.abs(b.y-c.y)<26){b.cann=simT}}
   if(b.cann){const c=cannons[0];if(simT-b.cann<.35){b.x=c.x;b.y=c.y;b.vx=0;b.vy=0}else{b.vx=-(160+R()*560);b.vy=-260-R()*120;b.cann=0;b.tp=simT;sfx(110,.25,'square',.07,-60);nz(.2,.1,300);pops.push({x:c.x-20,y:c.y-20,t:simT,s:'발사!'})}}
   // 블랙홀·웜홀 (되돌리기는 공마다 1번)
-  if(b.y>YR.hole[0]&&b.y<YR.hole[1])for(const hh of holes){if(!hh.fwd&&b.backUsed)continue;const dx=hh.x-b.x,dy=hh.y-b.y,d=Math.hypot(dx,dy);if(d<hh.pull&&simT-b.tp>1){const f=(1-d/hh.pull)*1600*dt;b.vx+=dx/d*f;b.vy+=dy/d*f;if(d<hh.r+b.r*.5){if(hh.fwd)teleport(b,hh.to,hh.msg,'fwd');else backTrap(b,hh.to,hh.msg,'hole')}}}
+  if(b.y>YR.hole[0]&&b.y<YR.hole[1])for(const hh of holes){if(!hh.fwd&&b.backUsed)continue;const dx=hh.x-b.x,dy=hh.y-b.y,d=dhyp(dx,dy);if(d<hh.pull&&simT-b.tp>1){const f=(1-d/hh.pull)*1600*dt;b.vx+=dx/d*f;b.vy+=dy/d*f;if(d<hh.r+b.r*.5){if(hh.fwd)teleport(b,hh.to,hh.msg,'fwd');else backTrap(b,hh.to,hh.msg,'hole')}}}
   // 관
   if(simT-b.tp>.8&&b.y>YR.pipe[0]&&b.y<YR.pipe[1]){for(const q of pipes){if(q.out)continue;if(Math.abs(b.x-q.x)<q.w/2&&b.y>q.y-10&&b.y<q.y+14){
     const randOut=()=>{const outs=pipes.filter(o=>o.out&&o.lane===q.lane);const o=outs[Math.floor(R()*outs.length)];b.x=o.x+(R()-.5)*6;b.y=o.y+16;b.vx=(R()-.5)*60;b.vy=120;b.tp=simT;sfx(220,.18,'square',.05,900)};
@@ -299,12 +310,12 @@ function stepSim(dt){
   // 결승
   if(simT>0&&b.y>GOAL_Y&&b.x>GATE[0]&&b.x<GATE[1]){b.done=true;b.doneT=simT;fin.push(b);b.rank=fin.length;onFinish(b)}
   // 끼임
-  if(simT>0){b.st+=dt;if(b.st>1.3){if(Math.hypot(b.y-b.sy,b.x-(b.sx||0))<10){b.vx+=(R()-.5)*260;b.vy-=200}b.sy=b.y;b.sx=b.x;b.st=0}}
+  if(simT>0){b.st+=dt;if(b.st>1.3){if(dhyp(b.y-b.sy,b.x-(b.sx||0))<10){b.vx+=(R()-.5)*260;b.vy-=200}b.sy=b.y;b.sx=b.x;b.st=0}}
   if(b.y>GOAL_Y+150){b.y=GOAL_Y-200;b.x=500;b.vx=0;b.vy=0}
   if(b.x<L||b.x>RX){b.x=cl(b.x,L+10,RX-10)}
   if(Math.abs(b.vx)>8)b.face=b.vx>0?1:-1;
  }
- const BB=simT<0?[]:balls.filter(b=>alive(b)&&!b.wind).sort((a,c)=>a.y-c.y);for(let i=0;i<BB.length;i++){const a=BB[i];for(let k=i+1;k<BB.length;k++){const c=BB[k];const dy=c.y-a.y;if(dy>26)break;const dx=c.x-a.x;if(Math.abs(dx)>26)continue;const d=Math.hypot(dx,dy),rr=a.r+c.r;if(d<rr&&d>0){const ma=a.r*a.r,mc=c.r*c.r,wa=mc/(ma+mc),wc=ma/(ma+mc);const nx=dx/d,ny=dy/d,o=(rr-d);a.x-=nx*o*wa;a.y-=ny*o*wa;c.x+=nx*o*wc;c.y+=ny*o*wc;const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const j=-1.5*rv;a.vx-=j*wa*nx;a.vy-=j*wa*ny;c.vx+=j*wc*nx;c.vy+=j*wc*ny}}}}
+ const BB=simT<0?[]:balls.filter(b=>alive(b)&&!b.wind).sort((a,c)=>a.y-c.y);for(let i=0;i<BB.length;i++){const a=BB[i];for(let k=i+1;k<BB.length;k++){const c=BB[k];const dy=c.y-a.y;if(dy>26)break;const dx=c.x-a.x;if(Math.abs(dx)>26)continue;const d=dhyp(dx,dy),rr=a.r+c.r;if(d<rr&&d>0){const ma=a.r*a.r,mc=c.r*c.r,wa=mc/(ma+mc),wc=ma/(ma+mc);const nx=dx/d,ny=dy/d,o=(rr-d);a.x-=nx*o*wa;a.y-=ny*o*wa;c.x+=nx*o*wc;c.y+=ny*o*wc;const rv=(c.vx-a.vx)*nx+(c.vy-a.vy)*ny;if(rv<0){const j=-1.5*rv;a.vx-=j*wa*nx;a.vy-=j*wa*ny;c.vx+=j*wc*nx;c.vy+=j*wc*ny}}}}
 }
 function onFinish(b){
  if(photo&&!photo.gap&&b===photo.c)photo.gap=Math.max(.01,b.doneT-winner.doneT);
@@ -325,7 +336,7 @@ function prog(b){return b.done?1e6-b.rank:b.out?-1e6:b.y}
 function rankOrder(){return balls.slice().sort((a,c)=>prog(c)-prog(a))}
 
 // ================= 감독(연출)·카메라 =================
-let slow=1,acc=0,stageLog=[];const SPD=1.35; // 전체 진행 속도(1분 안팎 맞춤)
+let slow=1,acc=0,stageLog=[];const SPD=1.35,REC_T=1.2; // 전체 진행 속도(1분 안팎 맞춤)
 function update(dt){
  VT+=dt;
  if(timers.length){const due=timers.filter(t=>t.t<=VT);if(due.length){timers=timers.filter(t=>t.t>VT);due.forEach(t=>t.fn())}}
@@ -344,13 +355,14 @@ function update(dt){
   // 1등 교체: 0.4초 이상 유지되면 'NEW 1위!'
   const L1=live[0];if(!leadCur){if(simT>2)leadCur=L1}else if(L1!==leadCur){if(!leadCand||leadCand.b!==L1)leadCand={b:L1,t:simT};else if(simT-leadCand.t>.7&&simT-lastLeadAnn>2){leadCur=L1;leadCand=null;leadN++;lastLeadAnn=simT;leadShow={t:VT,b:L1};sfx(1046,.07,'square',.05);later(.08,()=>sfx(1318,.07,'square',.05));later(.16,()=>sfx(1568,.12,'square',.05));event(L1,`NEW 1위! ${nick(L1)}`,'lead')}}else leadCand=null;
   // 초반: 참가자를 짧게 하나씩 스포트라이트(덜 비춘 사람 먼저)
-  if(ph==='early'&&simT>1&&simT>nextSpot&&simT>focus.until){nextSpot=simT+2.1;const pool=live.slice(1).filter(b=>!b.wind);if(pool.length){const mn=Math.min(...pool.map(b=>b.spot));const pp=pool.filter(b=>b.spot===mn);const b=pp[Math.floor(R()*pp.length)];b.spot++;focus={b,until:simT+1.5,msg:`${nick(b)} 지금 ${live.indexOf(b)+1}등`,kind:'spot'}}}
+  if(ph==='early'&&simT>1&&simT>nextSpot&&simT>focus.until){nextSpot=simT+2.1;const pool=live.slice(1).filter(b=>!b.wind);if(pool.length){const mn=Math.min(...pool.map(b=>b.spot));const pp=pool.filter(b=>b.spot===mn);const b=pp[Math.floor(CR()*pp.length)];b.spot++;focus={b,until:simT+1.5,msg:`${nick(b)} 지금 ${live.indexOf(b)+1}등`,kind:'spot'}}}
   // 폭탄 터지기 직전 컷
   if(ph!=='late'){const bb=live.find(b=>b.bombT&&b.bombT-simT<1.5&&b.bombT-simT>0);if(bb&&(focus.b!==bb||focus.kind!=='bomb')&&(focus.kind==='spot'||simT>focus.until))focus={b:bb,until:bb.bombT+.7,msg:'',kind:'bomb'}}}
  if(winner){const tt=VT-winVT;slow=tt<1.6?.15+.85*EIN(tt/1.6):1}
  else if(finalT>0)slow=live.length&&live[0].y>GOAL_Y-170?.5:1;
  else if(focus.b&&simT<focus.until&&(focus.kind==='light'||focus.kind==='boss'))slow=.6;else slow=1;
- if(ending&&VT-winVT>ending.cardIn+.5){slow=0;if(RACE&&!RACE.result)recordResult()} // 카드가 뜨면 물리 멈춤
+ if(ending&&VT-winVT>REC_T&&RACE&&!RACE.result)recordResult(); // 결과(2·3등…)는 우승 뒤 고정 시점에 기록 — 포토 피니시 연출(noPhoto·?photo=1)과 무관
+ if(ending&&VT-winVT>ending.cardIn+.5)slow=0; // 카드가 뜨면 물리 멈춤
  acc+=dt*slow*(simT<0?1:SPD);const h=HSTEP;let n=0;while(acc>=h&&n<24){stepSim(h);acc-=h;n++}
  let tx=cam.x,ty=cam.y,tz=1;
  if(simT<0){const sb=START;tz=Math.min(1,(W-16)/(sb.w+20),(H*.42)/(sb.h+20));tx=500;ty=sb.top+sb.h/2-(70/tz)} // 스타트존 전체가 화면 아래쪽에

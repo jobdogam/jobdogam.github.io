@@ -75,9 +75,9 @@ function paint(d,R){
  if(w){h+=`<div class="win"><div class="lb">우승</div><div class="job">${esc(w.job)}</div><div class="sub">${who(w)?who(w)+' 님 신청 · ':''}직업도감이 다음 편으로 만들어요</div>${(w.k||w.n||1)>1?`<div class="ids">같은 직업 신청 ${w.k||w.n}명</div>`:''}</div>`;
   h+=`<div class="grid2">${[1,2].map(i=>top[i]?`<div class="card"><div class="lb">${i+1}등</div><div class="job">${esc(top[i].job)}</div><div class="sub">${who(top[i])||'&nbsp;'}</div></div>`:'').join('')}</div>`;
   if(res.bad)h+=`<div class="card bad"><div class="lb">불운상 · 번개·함정을 가장 많이 맞은 사람</div><div class="job">${esc(res.bad.job)}</div><div class="sub">${who(res.bad)?who(res.bad)+' · ':''}번개 ${res.bad.light||0}번 · 함정 ${res.bad.trap||0}번</div></div>`}
- else h+=`<div class="empty">이 경기 기록에는 결과가 없어요. 다시보기로 확인해 주세요.</div>`;
+ else h+=`<div class="empty">이 경기 기록에는 결과가 없어요.${(R.v|0)>=4?' 다시보기로 확인해 주세요.':''}</div>`;
  h+=`<div class="stats"><div><b>${apps.toLocaleString()}</b><span>참가(공)</span></div><div><b>${jobs.toLocaleString()}</b><span>서로 다른 직업</span></div></div>`;
- h+=`<div class="btns">${(R.v|0)>=3?`<a class="btn" href="pinball.html?replay=${d}">경기 다시보기</a>`:''}<a class="btn g" href="event.html">다음 경기 참가하기</a></div>`;
+ h+=`<div class="btns">${(R.v|0)>=4?`<a class="btn" href="pinball.html?replay=${d}">경기 다시보기</a>`:''}<a class="btn g" href="event.html">다음 경기 참가하기</a></div>`;
  if(top.length){h+=`<h2>최종 순위 상위 20</h2><ol>${top.slice(0,20).map((x,i)=>`<li><i>${i+1}</i><b>${esc(x.job)}${who(x)?`<small>${who(x)}</small>`:''}</b><span>${(x.k||x.n||1)>1?`같은 직업 ${x.k||x.n}명`:''}</span></li>`).join('')}</ol>`}
  $('main').innerHTML=h;const c=spr(look);if(c){c.setAttribute('aria-label','우승 직업 캐릭터');$('main').querySelector('.win').appendChild(c)}}
 (async()=>{const q=new URLSearchParams(location.search).get('race'),list=await listRaces();let d=q&&/^\d{8}$/.test(q)?q:list[0];
