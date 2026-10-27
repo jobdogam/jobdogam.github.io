@@ -83,6 +83,7 @@ async function load(){
  $('upd').textContent='불러오는 중…';
  try{
   try{const m=await (await fetch('../made.json?'+Date.now())).json();MADE=new Set(m.map(norm))}catch(e){}
+  try{const b=await (await fetch('../blocked.json?'+Date.now())).json();b.forEach(x=>MADE.add(norm(x)))}catch(e){}
   const t=await (await fetch(G+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();
   const rows=parseCSV(t).slice(1).filter(r=>r.length>=3);
   const F=PBF.filter(rows);FR=F;

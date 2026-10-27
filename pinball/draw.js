@@ -255,7 +255,7 @@ function demoText(n=24){const J=['피아니스트','한의사','농구선수','�
  const out=[];for(let i=0;i<n;i++){if(i<24)out.push(`${J[i]} @${I[i]}${i<2?' #p:'+SP[i]:''}`);else{let id='';const L=5+Math.floor(r()*5);for(let k=0;k<L;k++)id+=r()<.2?String(Math.floor(r()*10)):A[Math.floor(r()*26)];if(r()<.3)id+=(r()<.5?'_':'.')+Math.floor(r()*99);out.push(`${J2[(i-24)%J2.length]}${i>=44?' '+(Math.floor((i-24)/J2.length)+1)+'호':''} @참가자${i+1}`)}}return out.join('\n')}
 $('demo').onclick=()=>{$('list').value=demoText(+(QS.get('n')||24));updInfo()};
 // 같은 직업은 공 1개(신청자 수와 상관없이), 이미 만든 직업(../made.json)은 뺌
-let MADE=new Set();async function loadMade(){try{const r=await fetch('../made.json?'+Date.now(),{cache:'no-store'});const a=await r.json();MADE=new Set(a.map(normJob))}catch(e){}}
+let MADE=new Set();async function loadMade(){try{const r=await fetch('../made.json?'+Date.now(),{cache:'no-store'});const a=await r.json();MADE=new Set(a.map(normJob))}catch(e){}try{const r=await fetch('../blocked.json?'+Date.now(),{cache:'no-store'});const b=await r.json();b.forEach(x=>MADE.add(normJob(x)))}catch(e){}}
 // 신청자 한 명당 공 1개(각자 그린 캐릭터), 이미 만든 직업(../made.json)은 뺌. k = 같은 직업 신청 수
 function groupJobs(list){let ex=0;const exJ=new Set(),cnt=new Map(),keep=[];
  for(const e of list){const k=normJob(e.job);if(!k)continue;if(MADE.has(k)){ex++;exJ.add(k);continue}keep.push(e);cnt.set(k,(cnt.get(k)||0)+1)}

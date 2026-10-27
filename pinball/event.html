@@ -122,14 +122,17 @@ function lockId(){const r=sentRec();if(!r)return;const v=$('id');v.value=r.id;v.
 const normId=v=>v.trim().replace(/^@+/,'').toLowerCase();
 const nJob=s=>s.toLowerCase().replace(/[\s·()・,.\-]/g,'');let MADE=new Set();
 fetch('../made.json?'+Date.now()).then(r=>r.json()).then(a=>{MADE=new Set(a.map(nJob));chkJob();if(ST.length)paintStat()}).catch(()=>{});
+let BLOCK=new Set();fetch('../blocked.json?'+Date.now()).then(r=>r.json()).then(a=>{BLOCK=new Set(a.map(nJob));chkJob();if(ST.length)paintStat()}).catch(()=>{});
+const isBlocked=j=>{const k=nJob(j);return BLOCK.has(k)||/av배우|av남배우|av여배우|포르노|성인배우/.test(k)};
 const isMade=j=>MADE.has(nJob(j));
-function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
+function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isBlocked(j)?'이 직업은 직업도감에서 다루지 않아요. 다른 직업을 적어 주세요.':j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
 $('job').addEventListener('input',chkJob);
 $('id').addEventListener('input',()=>{const v=normId($('id').value);$('prevName').textContent=v?'@'+v:'@아이디'});lockId();$('id').dispatchEvent(new Event('input'));
 const DL=Date.UTC(2026,9,27,13,0,0);function dlChk(){const left=DL-Date.now();if(left<=0){$('dl').textContent='신청이 마감됐어요. 결과 영상을 기다려 주세요!';$('send').disabled=true;$('send').textContent='신청 마감';return true}const h=Math.floor(left/3600e3),m=Math.floor(left%3600e3/60e3);$('dl').textContent='신청 마감: 오늘 밤 10시 · '+(h?h+'시간 ':'')+m+'분 남았어요';return false}dlChk();setInterval(dlChk,30000);
 $('send').onclick=async()=>{if(dlChk()){$('msg').textContent='신청이 마감됐어요';return}const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
  if(!/^[a-z0-9._]{1,30}$/.test(id)){msg('인스타그램 아이디를 확인해 주세요');$('id').focus();return}
  if(job.length<2){msg('보고 싶은 직업을 적어 주세요');$('job').focus();return}
+ if(isBlocked(job)){msg('이 직업은 직업도감에서 다루지 않아요. 다른 직업을 적어 주세요');$('job').focus();return}
  if(isMade(job)){msg('이미 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요');$('job').focus();return}
  if(px.filter(v=>v).length<6){msg('캐릭터를 조금 더 그려 주세요');return}
  const rec=sentRec();if(rec&&rec.id!==id){msg(`이 브라우저에선 @${rec.id} 님으로 이미 신청했어요. 같은 아이디로 수정만 할 수 있어요`);lockId();return}
@@ -176,7 +179,7 @@ let ST=[],stShow=60;
 async function loadStat(){try{const t=await (await fetch(GV+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();
  const F=PBF.filter(csv(t).slice(1));ST=F.groups.map(g=>({job:g.rep.job,id:g.rep.id,look:g.rep.look}));pbCount(ST.length);
  paintStat();$('stUpd').textContent=`참가 ${ST.length}명 · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준 · 1분마다 갱신`}catch(e){$('stUpd').textContent='현황을 불러오지 못했어요. 잠시 뒤 다시 보여 줄게요.'}}
-function paintStat(){const m=new Map();for(const e of ST){const k=nJob(e.job);if(MADE.has(k))continue;const q=m.get(k)||{job:e.job,n:0};q.n++;m.set(k,q)}
+function paintStat(){const m=new Map();for(const e of ST){const k=nJob(e.job);if(MADE.has(k)||isBlocked(e.job))continue;const q=m.get(k)||{job:e.job,n:0};q.n++;m.set(k,q)}
  const js=[...m.values()].sort((a,b)=>b.n-a.n||a.job.localeCompare(b.job)).slice(0,20),mx=Math.max(1,...js.map(j=>j.n));
  $('stJobs').innerHTML=js.length?js.map((j,i)=>`<li><i>${i+1}</i><b>${escH(j.job)}</b><span>${j.n}명</span><div class="bar"><u style="width:${Math.round(j.n/mx*100)}%"></u></div></li>`).join(''):'<li><b style="color:var(--sub)">아직 신청이 없어요</b></li>';
  const g=$('stGal');g.innerHTML='';const list=ST.slice().reverse();for(const e of list.slice(0,stShow)){const d=document.createElement('div');d.appendChild(sprC(e.look));d.insertAdjacentHTML('beforeend',`<b>${escH(e.job)}</b><small>@${escH(maskNick(e.id))}</small>`);g.appendChild(d)}
