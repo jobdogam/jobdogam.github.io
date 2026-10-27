@@ -52,7 +52,7 @@ a{color:var(--cy)}
 .gal small{display:block;font:11px G9,monospace;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style></head><body><div class="wrap">
 <h1>랜덤 핀볼</h1>
-<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
+<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub" id="dl" style="color:var(--pk);margin:0 0 6px">신청 마감: 10월 27일(화) 밤 10시</p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
 
 <div class="box">
  <h2>1. 내 캐릭터 그리기</h2>
@@ -120,7 +120,8 @@ const isMade=j=>MADE.has(nJob(j));
 function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
 $('job').addEventListener('input',chkJob);
 $('id').addEventListener('input',()=>{const v=normId($('id').value);$('prevName').textContent=v?'@'+v:'@아이디'});$('id').dispatchEvent(new Event('input'));
-$('send').onclick=async()=>{const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
+const DL=Date.UTC(2026,9,27,13,0,0);function dlChk(){const left=DL-Date.now();if(left<=0){$('dl').textContent='신청이 마감됐어요. 결과 영상을 기다려 주세요!';$('send').disabled=true;$('send').textContent='신청 마감';return true}const h=Math.floor(left/3600e3),m=Math.floor(left%3600e3/60e3);$('dl').textContent='신청 마감: 오늘 밤 10시 · '+(h?h+'시간 ':'')+m+'분 남았어요';return false}dlChk();setInterval(dlChk,30000);
+$('send').onclick=async()=>{if(dlChk()){$('msg').textContent='신청이 마감됐어요';return}const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
  if(!/^[a-z0-9._]{1,30}$/.test(id)){msg('인스타그램 아이디를 확인해 주세요');$('id').focus();return}
  if(job.length<2){msg('보고 싶은 직업을 적어 주세요');$('job').focus();return}
  if(isMade(job)){msg('이미 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요');$('job').focus();return}
