@@ -169,7 +169,8 @@ function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
 function parseLook(code,key){const h=hash(key||'x');const sp=(code||'').match(/p:([0-9a-g]{144})/);if(sp)return{c:0,f:0,h:0,spr:sp[1]};const m=(code||'').match(/c(\d+)f(\d+)h(\d+)/);return m?{c:+m[1]%BODY.length,f:+m[2]%FACES.length,h:+m[3]%HATS.length}:{c:h%BODY.length,f:(h>>4)%FACES.length,h:(h>>8)%HATS.length}}
 function makeBalls(list){
  balls=list.map((e,i)=>{const lk=parseLook(e.look,maskNick(e.id||'')+normJob(e.job));return{name:e.job,id:e.id||'',n:e.n||1,k:e.k||1,ids:e.ids||(e.id?[e.id]:[]),look:lk,c:lk.spr?sprMain(lk.spr):BODY[lk.c],spr:lk.spr?sprCanvas(lk.spr):null,x:0,y:0,vx:0,vy:0,r:MR,done:false,out:false,rank:0,rk:0,sy:0,st:0,tp:0,face:1,stun:0,light:0,trap:0,backUsed:false,shield:false,it:null,webT:0,bombT:0,wind:null,windDone:-9,spot:0}});
- const idx=balls.map((_,i)=>i).sort(()=>R()-.5);const BX=START?START.boxes:[startBox(balls.length)];
+ const idx=balls.map((_,i)=>i);for(let i=idx.length-1;i>0;i--){const j=Math.floor(R()*(i+1)),t=idx[i];idx[i]=idx[j];idx[j]=t} // v3(10/27): R로 Fisher-Yates — 브라우저마다 sort 결과가 달라 다시보기가 어긋나던 문제
+const BX=START?START.boxes:[startBox(balls.length)];
  idx.forEach((k,j)=>{const b=balls[k],sb=BX[j%BX.length],q=Math.floor(j/BX.length),r=Math.floor(q/sb.cols),c=q%sb.cols;b.x=sb.x0+10+c*16+(r%2?4:0);b.y=170-9-r*15});
  leadCur=null;leadCand=null;leadN=0;leadShow=null;lastLeadAnn=-9;fin=[];winner=null;winT=-1;winVT=-1;finalT=-1;focus={b:null,until:0,msg:''};nextSpot=6;klog=[];photo=null;ending=null;elimShow=null;musicCut=false;
  const n=balls.length;elimCP=false?[{y:2650,keep:Math.max(30,Math.ceil(n*.5))},{y:3460,keep:Math.max(20,Math.ceil(n*.25))}]:[];

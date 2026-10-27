@@ -274,14 +274,14 @@ function startRace(seed){const list=curList();if(list.length<2){msg('직업을 2
  if(seed==null)seed=REPLAY?REPLAY.seed:1+Math.floor(Math.random()*2147483000);R=seedRand(seed);VR=seedRand(seed+99);
  if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;START_N=list.length;build();makeBalls(list);simT=-3.4;acc=0;{const sb=START,z=Math.min(1,(W-16)/(sb.w+20),(H*.42)/(sb.h+20));cam={x:500,y:sb.top+sb.h/2-70/z,z}}stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
  // 기록(다시보기용): 직업별 공 목록·가린 아이디·캐릭터 코드·시드
- RACE={v:2,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,k:e.k||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
+ RACE={v:3,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,k:e.k||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
  applyFind();
  const t=aNow();if(t!=null){[0,1,2].forEach(i=>tone(440,t+.4+i,.14,'square',.06));tone(880,t+3.4,.3,'square',.07);later(3.4,musicStart)}return true}
 $('start').onclick=()=>startRace();
 // 경기 기록 저장(관리 모드)
 $('save').onclick=()=>{if(!RACE){msg('먼저 START로 경기를 돌려 주세요');return}if(!RACE.result&&!confirm('경기가 아직 안 끝나서 결과(1·2·3등·불운상)가 빠져요. 그래도 저장할까요?'))return;const bl=new Blob([JSON.stringify(RACE)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=`race_${RACE.date}.json`;document.body.appendChild(a);a.click();a.remove();msg(`race_${RACE.date}.json 저장됨 · 사이트 pinball/races/ 에 올리면 pinball.html?replay=${RACE.date}`)};
 // 다시보기
-async function loadReplay(d){try{const r=await fetch(`races/race_${d}.json?${Date.now()}`,{cache:'no-store'});if(!r.ok)throw 0;REPLAY=await r.json();$('pmode').textContent=`${+d.slice(4,6)}월 ${+d.slice(6)}일 경기 다시보기 · 직업 ${REPLAY.list.length}개`;$('start').textContent='▶ 다시보기 시작';$('practice').style.display='none';msg('')}catch(e){msg('그 날짜 경기 기록을 찾지 못했어요')}}
+async function loadReplay(d){try{const r=await fetch(`races/race_${d}.json?${Date.now()}`,{cache:'no-store'});if(!r.ok)throw 0;REPLAY=await r.json();if((REPLAY.v|0)<3){REPLAY=null;msg('이 날짜 경기는 다시보기를 지원하지 않아요(예전 기록). 결과는 결과 페이지에서 볼 수 있어요.');return}$('pmode').textContent=`${+d.slice(4,6)}월 ${+d.slice(6)}일 경기 다시보기 · 직업 ${REPLAY.list.length}개`;$('start').textContent='▶ 다시보기 시작';$('practice').style.display='none';msg('')}catch(e){msg('그 날짜 경기 기록을 찾지 못했어요')}}
 async function loadRaces(){let ds=[];try{const r=await fetch('races/index.json?'+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;ds=await r.json()}catch(e){try{const a=await (await fetch('https://api.github.com/repos/jobdogam/jobdogam.github.io/contents/pinball/races')).json();ds=Array.isArray(a)?a.map(f=>(String(f.name).match(/^race_(\d{8})\.json$/)||[])[1]).filter(Boolean):[]}catch(e2){}}
  ds=[...new Set(ds.map(String))].filter(d=>/^\d{8}$/.test(d)).sort().reverse().slice(0,10);$('past').innerHTML=ds.length?'지난 경기 다시보기 '+ds.map(d=>`<a href="?replay=${d}">${+d.slice(4,6)}/${+d.slice(6)}</a>`).join(' '):''}
 // 내 직업 찾기
