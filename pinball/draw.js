@@ -124,9 +124,9 @@ function draw(now){
  // 탈락한 공: 잠깐 회색으로 가라앉으며 사라짐
  for(const b of balls){if(!b.out)continue;const k=(simT-b.outT)/.9;if(k>1||!inV({x:b.ox,y:b.oy}))continue;g.globalAlpha=1-k;circ(b.ox,b.oy+k*20,MR,P.dk);g.globalAlpha=1;if(k<.6)ptext('탈락',b.ox,b.oy-12-k*10,9,P.rd,'center','G9')}
  const isFocus=b=>focus.b===b&&simT<focus.until;
- for(const b of balls){if(!alive(b)||!inV(b))continue;const i=b.rk-1;const big=(finalT>0&&i<2)||isFocus(b);const sc=(b.r/MR)*(big?1.5:1);drawChar(b,sc);drawFx(b,now)}
+ for(const b of balls){if(!alive(b)||!inV(b))continue;const i=b.rk-1;const big=(finalT>0&&i<2)||isFocus(b);const sc=(b.r/MR)*(big?1.5:1);if(FIND.b===b){const rr=b.r*sc+5+Math.abs(Math.sin(now*6))*4;ring(b.x,b.y,rr,Math.floor(now*8)%2?P.gr:P.wh);ring(b.x,b.y,rr+2,P.gr)}drawChar(b,sc);drawFx(b,now)}
  // 닉네임: 상위 3명 + 카메라가 비추는 사람만
- const lb=[];if(simT>0)live.forEach((b,i)=>{if(!inV(b,0))return;const big=(finalT>0&&i<2)||isFocus(b);if(i>=3&&!big)return;const fs=11,font='G11';let yy=b.y-(big?b.r*1.5:b.r)-(big?12:9);
+ const lb=[];if(simT>0)live.forEach((b,i)=>{if(!inV(b,0))return;const big=(finalT>0&&i<2)||isFocus(b)||FIND.b===b;if(i>=3&&!big)return;const fs=11,font='G11';let yy=b.y-(big?b.r*1.5:b.r)-(big?12:9);
   const w=Math.max(tw(b.name,i===0?14:11,'G11'),tw(subl(b),9,'G9'))+4;let tries=0;const hit=()=>lb.some(o=>b.x-w/2<o.x1&&b.x+w/2>o.x0&&yy-28<o.y1&&yy+6>o.y0);while(hit()&&tries<4){yy-=30;tries++}if(hit())return;lb.push({x0:b.x-w/2,x1:b.x+w/2,y0:yy-28,y1:yy+6});if(tries)pline(b.x,b.y-b.r-2,b.x,yy+5,'rgba(255,241,232,.5)',1);
   const sl=subl(b);if(i===0){if(sl)ptext(sl,b.x,yy+1,9,P.wh,'center','G9');ptext(b.name,b.x,yy-12,14,P.ye,'center','G11');crown(b.x,yy-25)}else{if(sl)ptext(sl,b.x,yy+1,9,P.lg,'center','G9');ptext(b.name,b.x,yy-11,11,i===1?P.cy:i===2?P.pk:P.wh,'center','G11')}
   if(isFocus(b)&&focus.kind==='spot'&&i>=3){const t=focus.msg;const w=tw(t,9,'G9')+8;px(b.x-w/2,yy+(big?30:22)+b.r,w,12,P.pu);ptext(t,b.x,yy+(big?36:28)+b.r,9,P.wh,'center','G9')}});
@@ -139,6 +139,12 @@ function stageBar(live){const y0=H-26;px(0,y0-2,W,28,'rgba(0,0,0,.8)');px(0,y0-2
  const lz=live.length?zoneOf(live[0].y):6;const nOut=balls.filter(b=>b.out).length;const cells=ZONES.length+(nOut?1:0),cw=W/cells;
  ZONES.forEach(([_,nm],i)=>{const x=i*cw,on=i===lz;if(on)px(x+1,y0,cw-2,24,P.pu);ptext(nm,x+cw/2,y0+6,9,on?P.ye:P.lg,'center','G9');ptext(String(cnt[i]+(i===6?goal:0)),x+cw/2,y0+17,11,cnt[i]||(i===6&&goal)?P.wh:P.dk,'center','G11');if(i<ZONES.length-1)px(x+cw-1,y0+2,1,20,P.dk)});
  if(nOut){const x=ZONES.length*cw;px(x,y0,cw,24,'#3a0010');ptext('탈락',x+cw/2,y0+6,9,P.rd,'center','G9');ptext(String(nOut),x+cw/2,y0+17,11,P.rd,'center','G11')}}
+// 미니맵: 왼쪽 위 세로 전체 맵(구간 색), 점은 1·2·3등 + 카메라가 비추는 공 + 내 직업 공만
+function minimap(live){const x0=4,y0=150,h=270,w=12;px(x0-2,y0-2,w+4,h+4,P.k);for(let i=0;i<h;i+=2)px(x0,y0+i,w,2,bgCol(i/h*GOAL_Y));
+ ZONES.forEach(([zy])=>{if(zy>0)px(x0,y0+Math.round(zy/GOAL_Y*h),w,1,'rgba(255,241,232,.45)')});px(x0,y0+h-2,w,2,P.ye);
+ const vy0=(cam.y-H*.5/cam.z)/GOAL_Y*h,vy1=(cam.y+H*.5/cam.z)/GOAL_Y*h;px(x0-2,y0+cl(vy0,0,h),2,Math.max(2,cl(vy1,0,h)-cl(vy0,0,h)),P.wh);
+ const dot=(b,c,big)=>{if(!b||b.out)return;const yy=y0+cl((b.done?GOAL_Y:b.y)/GOAL_Y*h,1,h-2),xx=x0+1+cl(b.x/WW*(w-5),0,w-5);const s=big?5:3;px(xx-1,yy-1-(big?1:0),s+2,s+2,P.k);px(xx,yy-(big?1:0),s,s,c)};
+ const fb=focus.b&&simT<focus.until?focus.b:null;dot(fb,P.wh);[live[2],live[1],live[0]].forEach((b,i)=>dot(b,[P.pk,P.cy,P.ye][i]));if(FIND.b&&Math.floor(VT*4)%2===0)dot(FIND.b,P.gr,true)}
 function drawHUD(now,ord,live){
  const run=state!=='idle',ended=!!winner;
  px(0,0,W,44,'rgba(0,0,0,.74)');px(0,44,W,2,P.pu);
@@ -156,6 +162,7 @@ function drawHUD(now,ord,live){
  if(run&&!ended&&finalT<0){const n=Math.min(5,ord.length);frameBox(W-122,62,116,20+n*16,P.bl);ptext(lastMode?'꼴찌 순위':'RANK',W-64,72,9,P.lg,'center','G9');const list=lastMode?ord.filter(b=>!b.out).reverse():ord;
   for(let i=0;i<n;i++){const b=list[i];if(!b)break;const y=88+i*16;circ(W-110,y,4,b.c);ptext(`${i+1}`,W-100,y,9,i===0?P.ye:P.wh,'left','G9');ptext(fitText(nick(b),9,'G9',78),W-91,y,9,i===0?P.ye:P.wh,'left','G9')}}
  if(run)stageBar(live);
+ if(run&&simT>0&&!ended)minimap(live);
  // 스테이지 배너(한 번에 하나만)
  if(stageShow.i>=0&&simT-stageShow.t<1.8&&!ended&&simT>0){const k=simT-stageShow.t,e=k<.4?EIN(k/.4):k>1.4?1-EOUT((k-1.4)/.4):1;const x=-W+e*W;const st=stages[stageShow.i];frameBox(x+44,196,W-88,28,st.sub?P.or:P.pk);ptext(st.n,x+W/2,210,12,P.wh,'center','G11')}
  if(leadShow&&VT-leadShow.t<1.4&&!ended){const k=VT-leadShow.t,e=k<.2?EIN(k/.2):k>1.1?1-EOUT((k-1.1)/.3):1,s=1+(1-e)*.6;g.save();g.translate(W/2,180);g.scale(s,s);g.globalAlpha=e;const t=fitText(leadShow.b.name,12,'G11',110);frameBox(-88,-13,176,26,P.ye);ptext('NEW 1위!',-44,0,11,(Math.floor(now*10)%2)?P.ye:P.wh,'center','G11');ptext(t,38,0,12,P.wh,'center','G11');g.restore();g.globalAlpha=1}
@@ -182,7 +189,7 @@ function drawEnding(now){const tt=VT-winVT,E=ending;
  const t1=tt-E.cardIn;
  if(t1>0&&tt<E.badIn+.3){const e=cardIn(t1),out=E.bad?cl((tt-E.badIn)/.3,0,1):0;g.save();g.translate(W/2-out*W,H*.46);const s=.6+.4*e;g.scale(s,s);g.globalAlpha=e;frameBox(-150,-128,300,256,P.ye);px(-146,-124,292,4,P.pk);
   ptext(lastMode?'꼴찌 당첨!':'WINNER!',0,-100,22,P.ye,'center','G14');drawChar({x:0,y:-50,r:18,c:winner.c,look:winner.look,spr:winner.spr,face:1},winner.spr?2.6:1);crown(0,-78);
-  ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(`신청 ${winner.n}명`,0,28,12,P.cy,'center','G11');if(winner.ids.length)ptext(fitText(winner.ids.slice(0,3).map(x=>'@'+x).join(' ')+(winner.ids.length>3?` 외 ${winner.n-3}명`:''),9,'G9',270),0,46,9,P.lg,'center','G9');ptext('직업도감이 만들어요!',0,70,12,P.ye,'center','G11');
+  ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(`신청 ${winner.n}명`,0,28,12,P.cy,'center','G11');if(winner.ids.length)ptext(fitText(winner.ids.slice(0,3).map(x=>'@'+maskNick(x)).join(' ')+(winner.ids.length>3?` 외 ${winner.n-3}명`:''),9,'G9',270),0,46,9,P.lg,'center','G9');ptext('직업도감이 만들어요!',0,70,12,P.ye,'center','G11');
   ptext(`기록 ${winner.doneT.toFixed(2)}초 · 번개 ${winner.light}번`,0,96,9,P.lg,'center','G9');g.restore();g.globalAlpha=1}
  // 불운상(WINNER 카드 뒤)
  if(E.bad&&tt>E.badIn&&tt<E.ctaIn+.3){const b=E.bad,e=cardIn(tt-E.badIn),out=cl((tt-E.ctaIn)/.3,0,1);g.save();g.translate(W/2+(1-e)*W-out*W,H*.46);frameBox(-140,-110,280,220,P.la);
@@ -219,8 +226,9 @@ function drawPhoto(k){const ph=photo,rn=ph.snap.find(b=>b.run),S=rn?cl(150/(Math
   frameBox(30,520,W-60,64,P.ye);ptext(`${nick(ph.a)} 승!`,W/2,540,14,P.ye,'center','G14');ptext(ph.gap?`${ph.gap.toFixed(2)}초 차 간발의 승리`:'간발의 차 승리',W/2,564,10,P.wh,'center','G11');ptext('1등',W/2,96,11,P.ye,'center','G11')}
  if(k<.12){g.fillStyle=`rgba(255,255,255,${1-k/.12})`;g.fillRect(0,0,W,H)}}
 // ================= 루프 =================
-let lastTs=performance.now();
-function frame(ts){const dt=Math.min(.05,(ts-lastTs)/1000);lastTs=ts;update(dt);draw(VT);requestAnimationFrame(frame)}
+let lastTs=performance.now(),accF=0;
+// 실시간도 1/60초 고정 진행 → 영상 렌더·다시보기와 같은 경기(결정적)
+function frame(ts){const dt=Math.min(.25,(ts-lastTs)/1000);lastTs=ts;accF+=dt;let k=0;while(accF>=1/60&&k<15){update(1/60);accF-=1/60;k++}if(k>=15)accF=0;draw(VT);syncFindUI();requestAnimationFrame(frame)}
 // ================= 목록 =================
 function parseList(text){const seen=new Set(),out=[];for(let line of text.split(/\n/)){line=line.trim();if(!line)continue;const m=line.match(/@([A-Za-z0-9._가-힣]{1,30})/);const id=m?m[1].toLowerCase():'';const lk=(line.match(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/)||[])[1]||'';const job=line.replace(/@[A-Za-z0-9._가-힣]+/,'').replace(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/,'').replace(/[,\t|/]+/g,' ').trim().slice(0,12);if(!job)continue;if(id&&seen.has(id))continue;if(id)seen.add(id);out.push({job,id,look:lk})}return out}
 function parseCSV(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(q){if(ch=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(f);f=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&s[i+1]=='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=ch}if(f||row.length){row.push(f);out.push(row)}return out}
@@ -240,18 +248,47 @@ function groupJobs(list){const m=new Map();let ex=0;const exJ=new Set();
 function updInfo(pre=''){const q=groupJobs(parseList($('list').value));msg((pre?pre+' · ':'')+`신청 ${q.apps}건 → 직업 ${q.list.length}개(공 ${q.list.length}개)`+(q.ex?` · 이미 만든 직업 ${q.exJobs}개(${q.ex}건) 제외`:''));return q}
 $('list').addEventListener('input',()=>updInfo());
 loadMade();
-function startRace(){const list=groupJobs(parseList($('list').value)).list;if(list.length<2){msg('직업을 2개 이상 넣어 주세요(이미 만든 직업은 빠져요)');return false}
- if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=$('lastMode').checked;tempo=150;build();makeBalls(list);simT=-3.4;acc=0;cam={x:500,y:120,z:1};stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
+const ADMIN=QS.get('admin')==='1',OFFLINE=QS.get('offline')==='1';let REPLAY=null,RACE=null;
+// 연습 모드 예시 직업(공개 화면 기본)
+const PJ=['피아니스트','한의사','농구선수','초등교사','플로리스트','제빵사','래퍼','특수교사','외교관','댄서','사육사','수능 출제위원','배드민턴 선수','항공기 정비사','치어리더','음반기획자','골프선수','측량사','네일아티스트','심판','기상캐스터','소방관','웹소설 작가','e스포츠 코치','간호사','경찰관','수의사','건축가','바리스타','프로게이머','성우','큐레이터','조향사','파일럿','셰프','변호사','유튜버','작곡가','마술사','천문학자','소믈리에','웹툰작가','로봇공학자','스턴트맨','동물조련사','해양생물학자','기관사','버스기사','택배기사','환경미화원','약사','치과의사','물리치료사','영양사','사서','학예사','고고학자','지질학자','기상학자','우주비행사','게임기획자','애니메이터','작가','기자','아나운서','PD','촬영감독','조명감독','음향감독','배우','가수','무용가','지휘자','바이올리니스트','드러머','DJ','패션디자이너','모델','헤어디자이너','메이크업 아티스트','플로리스트 강사','도예가','목수','용접공','전기기사','배관공','정원사','농부','어부','양봉가','제과제빵사','바텐더','호텔리어','여행가이드','통역사','번역가','외교관 비서','검사','판사','법무사','회계사','세무사','은행원','증권분석가','보험설계사','부동산중개사','공인중개사 보조','프로그래머','해커','데이터분석가','인공지능 연구원','로봇 수리공','드론 조종사','자동차 정비사','항해사','등대지기','산림감시원','국립공원 레인저','수영강사','태권도 사범','축구심판','야구선수','e스포츠 해설가'];
+function practiceList(n){return PJ.slice(0,Math.min(n,PJ.length)).map((j,i)=>({job:j,n:1,id:'',ids:[],look:''}))}
+function curList(){if(REPLAY)return REPLAY.list;if((ADMIN||OFFLINE)&&$('list').value.trim())return groupJobs(parseList($('list').value)).list;return practiceList(+($('pn')&&$('pn').value)||24)}
+const ymd=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
+function startRace(seed){const list=curList();if(list.length<2){msg('직업을 2개 이상 넣어 주세요(이미 만든 직업은 빠져요)');return false}
+ if(seed==null)seed=REPLAY?REPLAY.seed:1+Math.floor(Math.random()*2147483000);R=seedRand(seed);VR=seedRand(seed+99);
+ if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;build();makeBalls(list);simT=-3.4;acc=0;cam={x:500,y:120,z:1};stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
+ // 기록(다시보기용): 직업별 공 목록·가린 아이디·캐릭터 코드·시드
+ RACE={v:1,date:ymd(),seed,last:lastMode,list:list.map(e=>({job:e.job,n:e.n||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
+ applyFind();
  const t=aNow();if(t!=null){[0,1,2].forEach(i=>tone(440,t+.4+i,.14,'square',.06));tone(880,t+3.4,.3,'square',.07);later(3.4,musicStart)}return true}
-$('start').onclick=startRace;
+$('start').onclick=()=>startRace();
+// 경기 기록 저장(관리 모드)
+$('save').onclick=()=>{if(!RACE){msg('먼저 START로 경기를 돌려 주세요');return}const bl=new Blob([JSON.stringify(RACE)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=`race_${RACE.date}.json`;document.body.appendChild(a);a.click();a.remove();msg(`race_${RACE.date}.json 저장됨 · 사이트 pinball/races/ 에 올리면 pinball.html?replay=${RACE.date}`)};
+// 다시보기
+async function loadReplay(d){try{const r=await fetch(`races/race_${d}.json?${Date.now()}`,{cache:'no-store'});if(!r.ok)throw 0;REPLAY=await r.json();$('pmode').textContent=`${+d.slice(4,6)}월 ${+d.slice(6)}일 경기 다시보기 · 직업 ${REPLAY.list.length}개`;$('start').textContent='▶ 다시보기 시작';$('practice').style.display='none';msg('')}catch(e){msg('그 날짜 경기 기록을 찾지 못했어요')}}
+async function loadRaces(){let ds=[];try{const r=await fetch('races/index.json?'+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;ds=await r.json()}catch(e){try{const a=await (await fetch('https://api.github.com/repos/jobdogam/jobdogam.github.io/contents/pinball/races')).json();ds=Array.isArray(a)?a.map(f=>(String(f.name).match(/^race_(\d{8})\.json$/)||[])[1]).filter(Boolean):[]}catch(e2){}}
+ ds=[...new Set(ds.map(String))].filter(d=>/^\d{8}$/.test(d)).sort().reverse().slice(0,10);$('past').innerHTML=ds.length?'지난 경기 다시보기 '+ds.map(d=>`<a href="?replay=${d}">${+d.slice(4,6)}/${+d.slice(6)}</a>`).join(' '):''}
+// 내 직업 찾기
+function applyFind(){const q=normJob(($('find').value||'').trim());if(!q||!balls.length){FIND.b=null;return}FIND.b=balls.find(b=>normJob(b.name)===q)||balls.find(b=>normJob(b.name).includes(q))||null;FIND.cam=true;if(state==='run')$('fmsg').textContent=FIND.b?'':'그 직업 공이 없어요'}
+$('find').addEventListener('input',()=>{$('find2').value=$('find').value;applyFind()});
+$('find2').addEventListener('input',()=>{$('find').value=$('find2').value;applyFind()});
+$('fclear').onclick=()=>{$('find').value=$('find2').value='';FIND.b=null;$('fbox').hidden=true};
+$('fpill').onclick=()=>{$('fbox').hidden=!$('fbox').hidden;if(!$('fbox').hidden)$('find2').focus()};
+// 찾기 버튼은 캔버스 오른쪽(순위표 아래)에 붙임
+function syncFindUI(){const on=state==='run'&&!winner;const p=$('fpill');p.style.display=on?'block':'none';if(!on){$('fbox').hidden=true;return}const r=cv.getBoundingClientRect(),k=r.width/W;p.style.left=(r.left+(W-80)*k)+'px';p.style.top=(r.top+168*k)+'px';p.style.width=76*k+'px';p.style.height=22*k+'px';p.style.fontSize=Math.max(11,9*k)+'px';p.textContent=FIND.b?(FIND.b.name.length>5?FIND.b.name.slice(0,5)+'…':FIND.b.name):'내 직업 찾기';p.classList.toggle('on',!!FIND.b);
+ const bx=$('fbox');bx.style.left=(r.left+(W-206)*k)+'px';bx.style.top=(r.top+194*k)+'px';bx.style.width=202*k+'px'}
+// 공개(연습) / 관리 화면 나누기
+if(!ADMIN){for(const id of ['list','load','demo','save','adminHelp'])if($(id))$(id).style.display='none'}else{$('practice').style.display='none';$('pmode').textContent='관리 모드: 신청을 불러와 공식 경기를 돌리고, 끝나면 경기 기록을 저장하세요'}
+if(QS.get('replay')&&/^\d{8}$/.test(QS.get('replay')))loadReplay(QS.get('replay'));
+if(!OFFLINE)loadRaces();
 let tapT=0;cv.addEventListener('pointerdown',()=>{const n=Date.now();if(n-tapT<350){state='idle';musicStop();$('panel').style.display='block'}tapT=n});
 build();makeBalls([]);
-if(QS.get('demo')==='1'&&QS.get('offline')!=='1'){$('demo').onclick();if(QS.get('seed'))R=seedRand(+QS.get('seed'));$('sound').checked=false;$('lastMode').checked=QS.get('last')==='1';startRace()}
+if(QS.get('demo')==='1'&&!OFFLINE){$('list').value=demoText(+(QS.get('n')||24));$('sound').checked=false;$('lastMode').checked=QS.get('last')==='1';startRace(QS.get('seed')?+QS.get('seed'):5)}
 if(QS.get('offline')!=='1')requestAnimationFrame(frame);
 window.__dbg=()=>{const l=balls.filter(alive);return{VT:+VT.toFixed(2),simT:+simT.toFixed(1),fin:fin.length,n:balls.length,out:balls.filter(b=>b.out).length,winner:winner&&winner.name,maxY:l.length?Math.max(...l.map(b=>b.y|0)):0,minY:l.length?Math.min(...l.map(b=>b.y|0)):0}};
 // ================= 오프라인 렌더(프레임 단위 영상 + 오디오) =================
 window.__off={
- init(o){AREC=[];sndOn=true;VT=0;R=seedRand(o.seed||5);VR=seedRand((o.seed||5)+99);$('list').value=demoText(o.n||24);$('lastMode').checked=!!o.last;startRace();return balls.length},
+ init(o){AREC=[];sndOn=true;VT=0;REPLAY=o.replay||null;$('list').value=o.text||demoText(o.n||24);$('lastMode').checked=!!o.last;startRace(o.seed||5);return balls.length},
  st(){return{VT:+VT.toFixed(3),simT:+simT.toFixed(2),winVT:+winVT.toFixed(2),end:ending?+(winVT+ending.end).toFixed(2):0,done:!!ending&&VT>=winVT+ending.end,photo:!!photo,boss:boss.dead>=0?+boss.dead.toFixed(1):-1,bossHp:boss.hp,out:balls.filter(b=>b.out).length,fin:fin.length,stages:stageLog,winner:winner&&nick(winner),bad:ending&&ending.bad&&nick(ending.bad),back:balls.filter(b=>b.backUsed).length,klog:klog.length}},
  run(k){for(let i=0;i<k;i++)update(1/60);return this.st()},
  frames(k){const out=[];for(let i=0;i<k;i++){update(1/60);draw(VT);out.push(cv.toDataURL('image/png'))}return out},

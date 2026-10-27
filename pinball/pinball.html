@@ -22,18 +22,34 @@ button{flex:1;min-width:120px;border:0;padding:12px 10px;font:14px G11,monospace
 button:active{box-shadow:inset 4px 4px 0 #5F574F,inset -4px -4px 0 #FFF1E8}
 button.go{background:var(--grn);box-shadow:inset -4px -4px 0 #008751,inset 4px 4px 0 #B6FFB0}
 label{display:flex;align-items:center;gap:8px;font:12px G9,monospace;color:#C2C3C7;margin-top:10px}
+#past a{color:#3BF0FF;margin-right:8px}
+#fpill{position:fixed;z-index:4;min-width:0;padding:0;border:0;font-family:G11,monospace;background:rgba(0,0,0,.75);color:#00E436;box-shadow:inset 0 0 0 2px #00E436;cursor:pointer;white-space:nowrap;overflow:hidden}
+#fpill.on{background:#00E436;color:#000}
+#fbox{position:fixed;z-index:4;display:flex;flex-wrap:wrap;gap:4px;background:rgba(0,0,0,.85);padding:6px;box-shadow:inset 0 0 0 2px #00E436}
+#fbox[hidden]{display:none}
+#fbox input{flex:1;min-width:0;padding:6px;border:0;background:#000;color:#FFF1E8;font:14px G11,monospace}
+#fbox button{flex:none;min-width:0;padding:6px 10px;font-size:12px}
+#fmsg{width:100%;font:11px G9,monospace;color:#FF77A8}
 #msg{margin-top:10px;font:12px G9,monospace;color:var(--yel);min-height:16px}
 </style></head><body>
 <div id="stage"><canvas id="cv" width="360" height="640" aria-label="8비트 레이스 화면"></canvas></div>
 <div id="panel">
  <h1>직업도감 랜덤 핀볼</h1>
- <p>한 줄에 하나씩 <b>직업</b> 또는 <b>직업 @아이디</b>. 같은 직업은 신청 수와 상관없이 <b>공 1개</b>, 이미 만든 직업은 빠져요. 결승선을 가장 먼저 지나는 직업이 당첨!</p>
+ <p id="adminHelp">한 줄에 하나씩 <b>직업</b> 또는 <b>직업 @아이디</b>. 같은 직업은 신청 수와 상관없이 <b>공 1개</b>, 이미 만든 직업은 빠져요. 결승선을 가장 먼저 지나는 직업이 당첨!</p>
+ <p id="pmode" style="color:#FFEC27">연습 모드: 예시 직업으로 굴려 봐요. 공식 경기는 영상으로 공개돼요.</p>
+ <div id="practice" class="row" style="align-items:center"><label style="margin:0">공 개수 <select id="pn" style="font:13px G11,monospace;padding:6px;background:#000;color:#FFF1E8;border:0;box-shadow:inset 0 0 0 2px #5F574F"><option>24</option><option>60</option><option>120</option></select></label></div>
+ <label for="find" style="margin-top:12px">내 직업 찾기(선택)</label>
+ <input id="find" type="text" autocomplete="off" placeholder="예) 피아니스트" style="width:100%;padding:10px;border:0;background:#000;color:#FFF1E8;font:14px G11,monospace;box-shadow:inset 0 0 0 3px #5F574F">
  <textarea id="list" spellcheck="false" placeholder="피아니스트 @참가자1&#10;한의사 @참가자2"></textarea>
  <div class="row"><button id="load" type="button">이벤트 신청 불러오기</button><button id="demo" type="button">예시 넣기</button></div>
  <label><input id="lastMode" type="checkbox"> 꼴찌가 당첨</label>
  <label><input id="sound" type="checkbox" checked> 8비트 효과음</label>
  <div class="row"><button class="go" id="start" type="button">▶ START</button></div>
+ <div class="row"><button id="save" type="button">경기 기록 저장</button></div>
+ <p id="past" style="margin:12px 0 0"></p>
  <div id="msg" role="status"></div>
 </div>
+<button id="fpill" type="button" style="display:none">내 직업 찾기</button>
+<div id="fbox" hidden><input id="find2" type="text" autocomplete="off" placeholder="직업 이름"><button id="fclear" type="button">해제</button><span id="fmsg"></span></div>
 <script src="game.js"></script>
 <script src="draw.js"></script></body></html>

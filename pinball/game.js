@@ -147,7 +147,7 @@ let leadCur=null,leadCand=null,leadN=0,leadShow=null,lastLeadAnn=-9,focus={b:nul
 function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
 function parseLook(code,key){const h=hash(key||'x');const sp=(code||'').match(/p:([0-9a-g]{144})/);if(sp)return{c:0,f:0,h:0,spr:sp[1]};const m=(code||'').match(/c(\d+)f(\d+)h(\d+)/);return m?{c:+m[1]%BODY.length,f:+m[2]%FACES.length,h:+m[3]%HATS.length}:{c:h%BODY.length,f:(h>>4)%FACES.length,h:(h>>8)%HATS.length}}
 function makeBalls(list){
- balls=list.map((e,i)=>{const lk=parseLook(e.look,e.id||e.job);return{name:e.job,id:e.id||'',n:e.n||1,ids:e.ids||(e.id?[e.id]:[]),look:lk,c:lk.spr?sprMain(lk.spr):BODY[lk.c],spr:lk.spr?sprCanvas(lk.spr):null,x:0,y:0,vx:0,vy:0,r:MR,done:false,out:false,rank:0,rk:0,sy:0,st:0,tp:0,face:1,stun:0,light:0,trap:0,backUsed:false,shield:false,it:null,webT:0,bombT:0,wind:null,windDone:-9,spot:0}});
+ balls=list.map((e,i)=>{const lk=parseLook(e.look,normJob(e.job));return{name:e.job,id:e.id||'',n:e.n||1,ids:e.ids||(e.id?[e.id]:[]),look:lk,c:lk.spr?sprMain(lk.spr):BODY[lk.c],spr:lk.spr?sprCanvas(lk.spr):null,x:0,y:0,vx:0,vy:0,r:MR,done:false,out:false,rank:0,rk:0,sy:0,st:0,tp:0,face:1,stun:0,light:0,trap:0,backUsed:false,shield:false,it:null,webT:0,bombT:0,wind:null,windDone:-9,spot:0}});
  const idx=balls.map((_,i)=>i).sort(()=>R()-.5);const cols=Math.max(12,Math.ceil(balls.length/8));const dx=Math.min(15,180/cols);
  idx.forEach((k,j)=>{const b=balls[k];b.x=410+(j%cols)*dx+(Math.floor(j/cols)%2?dx/2:0);b.y=160-MR-Math.floor(j/cols)*15});
  leadCur=null;leadCand=null;leadN=0;leadShow=null;lastLeadAnn=-9;fin=[];winner=null;winT=-1;winVT=-1;finalT=-1;focus={b:null,until:0,msg:''};nextSpot=6;klog=[];photo=null;ending=null;elimShow=null;musicCut=false;
@@ -161,7 +161,11 @@ function sprCanvas(code){const c=document.createElement('canvas');c.width=c.heig
  for(let i=0;i<144;i++){const v=parseInt(code[i],17);if(v){o.fillStyle=SPAL[v];o.fillRect(i%12+1,(i/12|0)+1,1,1)}}return c}
 function sprMain(code){const n={};for(const ch of code)if(ch!=='0'&&ch!=='1')n[ch]=(n[ch]||0)+1;const k=Object.keys(n).sort((a,b)=>n[b]-n[a])[0];return k?SPAL[parseInt(k,17)]:'#FFF1E8'}
 const nick=b=>b.name;
-const subl=b=>b.n>1?`신청 ${b.n}명`:(b.id?'@'+b.id:'');
+// 아이디 가리기: 사이트 신청 순위와 같은 방식(앞 2글자 + ***), 이미 가린 값에 다시 써도 그대로
+const maskNick=s=>{s=String(s||'').trim();const a=[...s];return a.length<=2?(a[0]||'')+'*':a.slice(0,2).join('')+'***'};
+const subl=b=>b.n>1?`신청 ${b.n}명`:(b.id?'@'+maskNick(b.id):'');
+// 내 직업 찾기: 그 공이 반짝이고 카메라가 따라감
+const FIND={b:null,cam:true};
 // 직업 이름 정규화(사이트 norm과 같게): 공백·괄호·가운뎃점·쉼표·마침표·하이픈 무시, 소문자
 const normJob=s=>String(s||'').toLowerCase().replace(/[\s·()・,.\-]/g,'');
 const alive=b=>!b.done&&!b.out;
@@ -330,6 +334,7 @@ function update(dt){
  else if(focus.b&&simT<focus.until&&alive(focus.b)){tx=focus.b.x;ty=focus.b.y;tz=1.25}
  else if(phase()==='early'){const a=live[0],m=live[Math.floor(live.length/2)];tx=a.x*.5+m.x*.5;ty=a.y*.55+m.y*.45+20;tz=.78}
  else{const a=live[0],b=live[Math.min(2,live.length-1)];tx=a.x*.7+b.x*.3;ty=a.y*.75+b.y*.25+30}
+ if(FIND.b&&FIND.cam&&!winner&&simT>0&&alive(FIND.b)){tx=FIND.b.x;ty=FIND.b.y;tz=1.3}
  if(window.camF&&!winner&&simT>-1){const c=window.camF;if(alive(c)){tx=c.x;ty=c.y;tz=c.z||1.3}}
  const hw=W*.5/tz;tx=cl(tx,hw,WW-hw);ty=cl(ty,120,GOAL_Y+60);
  const f=Math.min(1,dt*(phase()==='late'?4:3.2));cam.x+=(tx-cam.x)*f;cam.y+=(ty-cam.y)*f;cam.z+=(tz-cam.z)*Math.min(1,dt*2.5);

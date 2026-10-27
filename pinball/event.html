@@ -38,6 +38,18 @@ input[type=text]:focus{outline:none;box-shadow:inset 0 0 0 3px var(--cy)}
 #ticket{display:none;margin-top:14px;text-align:center}
 #ticket img{width:100%;max-width:280px;box-shadow:0 0 0 3px #000,0 0 0 6px #FFEC27;image-rendering:pixelated}
 a{color:var(--cy)}
+
+.st3{font:13px G11,monospace;color:var(--yel);margin:14px 0 8px}
+.rk{list-style:none;margin:0;padding:0}
+.rk li{display:grid;grid-template-columns:26px 1fr 52px;gap:6px;align-items:center;font:13px G11,monospace;margin:5px 0}
+.rk li i{font-style:normal;color:var(--sub);text-align:right}.rk li b{font-weight:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk li span{font:12px G9,monospace;color:var(--cy);text-align:right}
+.rk li .bar{grid-column:2/4;height:5px;background:#000;margin-top:-2px}.rk li .bar u{display:block;height:100%;background:var(--pk)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.gal div{background:#000;padding:8px 4px;text-align:center;box-shadow:0 0 0 2px #5F574F;min-width:0}
+.gal canvas{width:48px;height:48px;image-rendering:pixelated;display:block;margin:0 auto 6px}
+.gal b{display:block;font:12px G11,monospace;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gal small{display:block;font:11px G9,monospace;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style></head><body><div class="wrap">
 <h1>랜덤 핀볼</h1>
 <p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
@@ -61,6 +73,12 @@ a{color:var(--cy)}
  <div class="row"><button class="btn go" id="send" type="button">참가 신청 ▶</button></div>
  <div id="msg" role="status"></div>
  <div id="ticket"><img id="tkImg" alt="내 참가 티켓"><div class="row"><button class="btn go" id="tkSave" type="button">참가 티켓 저장</button></div><p class="note">스토리에 올리고 #직업도감_핀볼 을 달아 주세요. 저장이 안 되면 그림을 길게 눌러 저장해요.</p></div>
+</div>
+<div class="box" id="stat"><h2>3. 참가 현황</h2>
+ <p class="note" id="stUpd">불러오는 중…</p>
+ <h3 class="st3">직업별 신청 순위</h3><ol id="stJobs" class="rk"></ol>
+ <h3 class="st3">참가 캐릭터</h3><div id="stGal" class="gal"></div>
+ <div class="row"><button class="btn" id="stMore" type="button" hidden>더 보기</button></div>
 </div>
 <div class="box"><h2>안내</h2><p class="note">· 신청 때는 인스타그램 아이디와 직업만 받아요. 다른 개인정보는 받지 않아요.<br>· 경품이 있는 이벤트면 당첨자에게만 인스타그램 DM으로 연락해요. 만 14세 미만 당첨자는 보호자 동의를 받은 뒤 보내요.<br>· 경기 결과 영상에 아이디와 캐릭터가 나올 수 있어요.<br>· 이 이벤트는 인스타그램이 후원하거나 운영하지 않으며 인스타그램과 관련이 없어요.</p></div>
 <p class="note" style="text-align:center"><a href="https://jobdogam.github.io/">직업도감 홈</a></p>
@@ -97,7 +115,7 @@ const saved=LS.get('pinball_px');if(saved&&saved.length===144){px=[...saved].map
 $('id').value=LS.get('pinball_id')||'';$('job').value=LS.get('pinball_job')||'';
 const normId=v=>v.trim().replace(/^@+/,'').toLowerCase();
 const nJob=s=>s.toLowerCase().replace(/[\s·()・,.\-]/g,'');let MADE=new Set();
-fetch('../made.json?'+Date.now()).then(r=>r.json()).then(a=>{MADE=new Set(a.map(nJob));chkJob()}).catch(()=>{});
+fetch('../made.json?'+Date.now()).then(r=>r.json()).then(a=>{MADE=new Set(a.map(nJob));chkJob();if(ST.length)paintStat()}).catch(()=>{});
 const isMade=j=>MADE.has(nJob(j));
 function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
 $('job').addEventListener('input',chkJob);
@@ -137,4 +155,22 @@ $('tkSave').onclick=()=>{if(!tkURL)return;const a=document.createElement('a');a.
 
 (function(){const G='https://docs.google.com/spreadsheets/d/18XwQDvv-OFtv9NA1V1a9SiSLaR6oFu5gNjZfZsZ7qRg/gviz/tq?gid=470754975&tqx=out:csv&tq=';
 function go(){fetch(G+encodeURIComponent("select C where D = '핀볼이벤트'"),{cache:'no-store'}).then(r=>r.text()).then(s=>{const S=new Set();s.trim().split('\n').slice(1).forEach(l=>{const id=l.replace(/^"|"$/g,'').split('␟')[0].trim().replace(/^@+/,'').toLowerCase();if(id)S.add(id)});if(S.size)$('pbCnt').textContent='지금 '+S.size.toLocaleString()+'명 참가 중'}).catch(()=>{})}go();setInterval(go,60000)})();
+
+// 참가 현황: 직업별 신청 순위(이미 만든 직업 제외) + 참가 캐릭터 갤러리(가린 아이디), 1분마다 갱신
+const GV='https://docs.google.com/spreadsheets/d/18XwQDvv-OFtv9NA1V1a9SiSLaR6oFu5gNjZfZsZ7qRg/gviz/tq?gid=470754975&tqx=out:csv&tq=';
+const maskNick=s=>{s=String(s||'').trim();const a=[...s];return a.length<=2?(a[0]||'')+'*':a.slice(0,2).join('')+'***'};
+const escH=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function csv(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(q){if(ch=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(f);f=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&s[i+1]=='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=ch}if(f||row.length){row.push(f);out.push(row)}return out}
+function sprC(code){const c=document.createElement('canvas');c.width=c.height=14;const o=c.getContext('2d');if(code&&code.length===144){for(const [ox,oy] of [[0,1],[2,1],[1,0],[1,2]])for(let i=0;i<144;i++)if(parseInt(code[i],17)){o.fillStyle='#000';o.fillRect(i%12+ox,(i/12|0)+oy,1,1)}for(let i=0;i<144;i++){const v=parseInt(code[i],17);if(v){o.fillStyle=SPAL[v];o.fillRect(i%12+1,(i/12|0)+1,1,1)}}}else{o.fillStyle='#5F574F';o.beginPath();o.arc(7,7,5,0,7);o.fill()}return c}
+let ST=[],stShow=60;
+async function loadStat(){try{const t=await (await fetch(GV+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();const byId=new Map();
+ for(const r of csv(t).slice(1)){const job=(r[1]||'').trim(),pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,'').toLowerCase(),look=(pk[1]||'').replace(/^p:/,'');if(!id||job.length<2)continue;byId.delete(id);byId.set(id,{job,id,look})}
+ ST=[...byId.values()];paintStat();$('stUpd').textContent=`참가 ${ST.length}명 · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준 · 1분마다 갱신`}catch(e){$('stUpd').textContent='현황을 불러오지 못했어요. 잠시 뒤 다시 보여 줄게요.'}}
+function paintStat(){const m=new Map();for(const e of ST){const k=nJob(e.job);if(MADE.has(k))continue;const q=m.get(k)||{job:e.job,n:0};q.n++;m.set(k,q)}
+ const js=[...m.values()].sort((a,b)=>b.n-a.n||a.job.localeCompare(b.job)).slice(0,20),mx=Math.max(1,...js.map(j=>j.n));
+ $('stJobs').innerHTML=js.length?js.map((j,i)=>`<li><i>${i+1}</i><b>${escH(j.job)}</b><span>${j.n}명</span><div class="bar"><u style="width:${Math.round(j.n/mx*100)}%"></u></div></li>`).join(''):'<li><b style="color:var(--sub)">아직 신청이 없어요</b></li>';
+ const g=$('stGal');g.innerHTML='';const list=ST.slice().reverse();for(const e of list.slice(0,stShow)){const d=document.createElement('div');d.appendChild(sprC(e.look));d.insertAdjacentHTML('beforeend',`<b>${escH(e.job)}</b><small>@${escH(maskNick(e.id))}</small>`);g.appendChild(d)}
+ $('stMore').hidden=list.length<=stShow}
+$('stMore').onclick=()=>{stShow+=60;paintStat()};
+loadStat();setInterval(loadStat,60000);
 </script></body></html>
