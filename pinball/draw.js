@@ -175,7 +175,7 @@ function drawHUD(now,ord,live){
  if(state==='run'&&simT<0.6){const c=simT<0?Math.ceil(-simT):0;const k=simT<0?1-((-simT)%1):simT/.6;const s=1+(1-EIN(Math.min(1,k*1.6)))*1.2;g.save();g.translate(W/2,H/2);g.scale(s,s);g.globalAlpha=1-EOUT(cl((k-.6)/.4,0,1));ptext(c?String(c):'GO!',0,0,c?48:40,c?P.wh:P.gr,'center','G14');g.restore()
   if(simT<0){const k=simT+3.4,i=EIN(cl(k/.35,0,1)),o=EOUT(cl((k-3.0)/.4,0,1)),a=i*(1-o);if(a>0){g.save();g.globalAlpha=a;g.translate(-(1-i)*40+o*30,0);
    px(0,150,W,30,'rgba(0,0,0,.88)');ptext(PRACTICE?'연습 경기':(lastMode?'꼴찌 직업이 다음 영상 주인공':'1등 직업이 다음 영상 주인공'),16,165,11,P.wh,'left','G11');
-   ptext(PRACTICE?'예시 직업':`참가 ${INFO.apps}명`,16,206,26,P.wh,'left','G14');ptext(`직업 ${INFO.jobs}개 출전!`,16,240,26,P.ye,'left','G14');g.restore();g.globalAlpha=1}}}
+   px(0,182,W,78,'rgba(0,0,0,.72)');ptext(PRACTICE?'예시 직업':`참가 ${INFO.apps}명`,16,206,26,P.wh,'left','G14');ptext(`직업 ${INFO.jobs}개 출전!`,16,240,26,P.ye,'left','G14');g.restore();g.globalAlpha=1}}}
  // FINAL
  if(finalT>0&&!ended){const beat=Math.pow(Math.max(0,Math.sin((simT-finalT)*8)),5);g.fillStyle=`rgba(255,0,77,${.2+.32*beat})`;for(let y=0;y<H-28;y+=4)for(let x=0;x<W;x+=4){const d=Math.min(x,W-x,y,H-28-y);if(d<22&&((x+y)/4)%2===0)g.fillRect(x,y,2,2)}
   const k=EIN(cl((simT-finalT)/.5,0,1));frameBox(W/2-80,62+(1-k)*-70,160,26,P.rd);ptext((Math.floor(now*5)%2?'!! ':'')+'FINAL LAP'+(Math.floor(now*5)%2?' !!':''),W/2,75+(1-k)*-70,12,P.wh,'center','G11');
@@ -194,7 +194,7 @@ function drawEnding(now){const tt=VT-winVT,E=ending;
  const t1=tt-E.cardIn;
  if(t1>0&&tt<E.badIn+.3){const e=cardIn(t1),out=E.bad?cl((tt-E.badIn)/.3,0,1):0;g.save();g.translate(W/2-out*W,H*.46);const s=.6+.4*e;g.scale(s,s);g.globalAlpha=e;frameBox(-150,-128,300,256,P.ye);px(-146,-124,292,4,P.pk);
   ptext(lastMode?'꼴찌 당첨!':'WINNER!',0,-100,22,P.ye,'center','G14');drawChar({x:0,y:-50,r:18,c:winner.c,look:winner.look,spr:winner.spr,face:1},winner.spr?2.6:1);crown(0,-78);
-  ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(`신청 ${winner.n}명`,0,28,12,P.cy,'center','G11');if(winner.ids.length)ptext(fitText(winner.ids.slice(0,3).map(x=>'@'+maskNick(x)).join(' ')+(winner.ids.length>3?` 외 ${winner.n-3}명`:''),9,'G9',270),0,46,9,P.lg,'center','G9');ptext('직업도감이 만들어요!',0,70,12,P.ye,'center','G11');
+  ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(winner.n>1?`신청 ${winner.n}명`:(winner.id?`@${maskNick(winner.id)} 님`:'다음 직업 확정!'),0,28,12,P.cy,'center','G11');if(winner.k>1)ptext(`같은 직업 신청 ${winner.k}명`,0,46,9,P.lg,'center','G9');ptext('직업도감이 만들어요!',0,70,12,P.ye,'center','G11');
   ptext(`기록 ${winner.doneT.toFixed(2)}초 · 번개 ${winner.light}번`,0,96,9,P.lg,'center','G9');g.restore();g.globalAlpha=1}
  // 불운상(WINNER 카드 뒤)
  if(E.bad&&tt>E.badIn&&tt<E.badOut+.3){const b=E.bad,e=cardIn(tt-E.badIn),out=cl((tt-E.badOut)/.3,0,1);g.save();g.translate(W/2+(1-e)*W-out*W,H*.46);frameBox(-140,-110,280,220,P.la);
@@ -206,7 +206,8 @@ function drawEnding(now){const tt=VT-winVT,E=ending;
  // 엔딩 문구
  if(E.next&&tt>E.nextIn&&tt<E.ctaIn+.3){const e=cardIn(tt-E.nextIn),out=EOUT(cl((tt-E.ctaIn)/.3,0,1));g.globalAlpha=e*(1-out);px(0,0,W,H,'rgba(4,2,12,.9)');g.save();g.globalAlpha=1-out;g.translate(W/2+(1-e)*W,H*.46);
   px(-W/2,-70,W,30,'rgba(0,0,0,.9)');ptext('다음 직업도감은',0,-55,12,P.wh,'center','G11');const nm=winner.name;ptext(nm+'!',0,-6,nm.length>6?24:32,P.ye,'center','G14');
-  frameBox(-70,30,140,28,P.ye);ptext('곧 공개',0,44,13,P.ye,'center','G11');g.restore();g.globalAlpha=1}
+  drawChar({x:-74,y:44,r:9,c:winner.c,look:winner.look,spr:winner.spr,face:1},winner.spr?1.6:1);if(winner.id)ptext(`@${maskNick(winner.id)} 님 신청`,0,90,10,P.lg,'center','G9');
+  frameBox(-50,30,120,28,P.ye);ptext('곧 공개',10,44,13,P.ye,'center','G11');g.restore();g.globalAlpha=1}
  if(tt>E.ctaIn){const e=cardIn(tt-E.ctaIn);g.globalAlpha=e;px(0,0,W,H,'rgba(4,2,12,.93)');g.globalAlpha=1;g.save();g.translate(0,(1-e)*40);
   ptext('다음 핀볼 참가자 모집',W/2,170,11,P.cy,'center','G11');
   ptext('댓글로 직업 남기면',W/2,222,22,P.wh,'center','G14');ptext('다음 핀볼에 출전!',W/2,256,22,P.ye,'center','G14');
@@ -250,25 +251,25 @@ function demoText(n=24){const J=['피아니스트','한의사','농구선수','�
 $('demo').onclick=()=>{$('list').value=demoText(+(QS.get('n')||24));updInfo()};
 // 같은 직업은 공 1개(신청자 수와 상관없이), 이미 만든 직업(../made.json)은 뺌
 let MADE=new Set();async function loadMade(){try{const r=await fetch('../made.json?'+Date.now(),{cache:'no-store'});const a=await r.json();MADE=new Set(a.map(normJob))}catch(e){}}
-function groupJobs(list){const m=new Map();let ex=0;const exJ=new Set();
- for(const e of list){const k=normJob(e.job);if(!k)continue;if(MADE.has(k)){ex++;exJ.add(k);continue}let q=m.get(k);if(!q){q={job:e.job,ids:[],anon:0,looks:[]};m.set(k,q)}
-  if(e.id){if(!q.ids.includes(e.id))q.ids.push(e.id)}else q.anon++;if(/^p:/.test(e.look||''))q.looks.push(e.look)}
- const out=[...m.entries()].map(([k,q])=>{const n=q.ids.length+q.anon,r=seedRand(hash(k)+11);const look=q.looks.length?q.looks[Math.floor(r()*q.looks.length)]:'';return{job:q.job,id:n===1&&q.ids.length===1?q.ids[0]:'',n,ids:q.ids,look}});
- return{list:out,ex,exJobs:exJ.size,apps:list.length}}
-function updInfo(pre=''){const q=groupJobs(parseList($('list').value));msg((pre?pre+' · ':'')+`신청 ${q.apps}건 → 직업 ${q.list.length}개(공 ${q.list.length}개)`+(q.ex?` · 이미 만든 직업 ${q.exJobs}개(${q.ex}건) 제외`:''));return q}
+// 신청자 한 명당 공 1개(각자 그린 캐릭터), 이미 만든 직업(../made.json)은 뺌. k = 같은 직업 신청 수
+function groupJobs(list){let ex=0;const exJ=new Set(),cnt=new Map(),keep=[];
+ for(const e of list){const k=normJob(e.job);if(!k)continue;if(MADE.has(k)){ex++;exJ.add(k);continue}keep.push(e);cnt.set(k,(cnt.get(k)||0)+1)}
+ const out=keep.map(e=>({job:e.job,id:e.id||'',n:1,k:cnt.get(normJob(e.job)),ids:e.id?[e.id]:[],look:e.look||''}));
+ return{list:out,ex,exJobs:exJ.size,apps:list.length,jobs:cnt.size}}
+function updInfo(pre=''){const q=groupJobs(parseList($('list').value));msg((pre?pre+' · ':'')+`참가 ${q.list.length}명(공 ${q.list.length}개) · 직업 ${q.jobs}개`+(q.ex?` · 이미 만든 직업 ${q.exJobs}개(${q.ex}건) 제외`:''));return q}
 $('list').addEventListener('input',()=>updInfo());
 loadMade();
 const ADMIN=QS.get('admin')==='1',OFFLINE=QS.get('offline')==='1';let REPLAY=null;
 // 연습 모드 예시 직업(공개 화면 기본)
 const PJ=['피아니스트','한의사','농구선수','초등교사','플로리스트','제빵사','래퍼','특수교사','외교관','댄서','사육사','수능 출제위원','배드민턴 선수','항공기 정비사','치어리더','음반기획자','골프선수','측량사','네일아티스트','심판','기상캐스터','소방관','웹소설 작가','e스포츠 코치','간호사','경찰관','수의사','건축가','바리스타','프로게이머','성우','큐레이터','조향사','파일럿','셰프','변호사','유튜버','작곡가','마술사','천문학자','소믈리에','웹툰작가','로봇공학자','스턴트맨','동물조련사','해양생물학자','기관사','버스기사','택배기사','환경미화원','약사','치과의사','물리치료사','영양사','사서','학예사','고고학자','지질학자','기상학자','우주비행사','게임기획자','애니메이터','작가','기자','아나운서','PD','촬영감독','조명감독','음향감독','배우','가수','무용가','지휘자','바이올리니스트','드러머','DJ','패션디자이너','모델','헤어디자이너','메이크업 아티스트','플로리스트 강사','도예가','목수','용접공','전기기사','배관공','정원사','농부','어부','양봉가','제과제빵사','바텐더','호텔리어','여행가이드','통역사','번역가','외교관 비서','검사','판사','법무사','회계사','세무사','은행원','증권분석가','보험설계사','부동산중개사','공인중개사 보조','프로그래머','해커','데이터분석가','인공지능 연구원','로봇 수리공','드론 조종사','자동차 정비사','항해사','등대지기','산림감시원','국립공원 레인저','수영강사','태권도 사범','축구심판','야구선수','e스포츠 해설가'];
 function practiceList(n){return PJ.slice(0,Math.min(n,PJ.length)).map((j,i)=>({job:j,n:1,id:'',ids:[],look:''}))}
-function curList(){PRACTICE=false;if(REPLAY){INFO={apps:REPLAY.apps||REPLAY.list.reduce((s,e)=>s+(e.n||1),0),jobs:REPLAY.list.length};return REPLAY.list}if((ADMIN||OFFLINE)&&$('list').value.trim()){const q=groupJobs(parseList($('list').value));INFO={apps:q.list.reduce((s,e)=>s+(e.n||1),0),jobs:q.list.length};return q.list}PRACTICE=true;const l=practiceList(+($('pn')&&$('pn').value)||24);INFO={apps:l.length,jobs:l.length};return l}
+function curList(){PRACTICE=false;if(REPLAY){INFO={apps:REPLAY.apps||REPLAY.list.reduce((s,e)=>s+(e.n||1),0),jobs:REPLAY.jobs||new Set(REPLAY.list.map(e=>normJob(e.job))).size};return REPLAY.list}if((ADMIN||OFFLINE)&&$('list').value.trim()){const q=groupJobs(parseList($('list').value));INFO={apps:q.list.length,jobs:q.jobs};return q.list}PRACTICE=true;const l=practiceList(+($('pn')&&$('pn').value)||24);INFO={apps:l.length,jobs:l.length};return l}
 const ymd=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
 function startRace(seed){const list=curList();if(list.length<2){msg('직업을 2개 이상 넣어 주세요(이미 만든 직업은 빠져요)');return false}
  if(seed==null)seed=REPLAY?REPLAY.seed:1+Math.floor(Math.random()*2147483000);R=seedRand(seed);VR=seedRand(seed+99);
  if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;build();makeBalls(list);simT=-3.4;acc=0;cam={x:500,y:120,z:1};stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
  // 기록(다시보기용): 직업별 공 목록·가린 아이디·캐릭터 코드·시드
- RACE={v:2,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
+ RACE={v:2,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,k:e.k||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
  applyFind();
  const t=aNow();if(t!=null){[0,1,2].forEach(i=>tone(440,t+.4+i,.14,'square',.06));tone(880,t+3.4,.3,'square',.07);later(3.4,musicStart)}return true}
 $('start').onclick=()=>startRace();

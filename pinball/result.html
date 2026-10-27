@@ -61,6 +61,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 const maskNick=s=>{s=String(s||'').trim();const a=[...s];return a.length<=2?(a[0]||'')+'*':a.slice(0,2).join('')+'***'};
 const SPAL=[null,'#000000','#1D2B53','#7E2553','#008751','#AB5236','#5F574F','#C2C3C7','#FFF1E8','#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#83769C','#FF77A8','#FFCCAA'];
 const fmt=d=>`${d.slice(0,4)}년 ${+d.slice(4,6)}월 ${+d.slice(6)}일`;
+const who=x=>x.id?'@'+esc(maskNick(x.id)):((x.ids||[]).length?(x.ids||[]).slice(0,3).map(i=>'@'+esc(maskNick(i))).join(' '):'');
 const ids=x=>(x.ids||[]).slice(0,3).map(i=>'@'+esc(maskNick(i))).join(' ')+((x.n||1)>3?` 외 ${x.n-3}명`:'');
 function spr(code){code=(code||'').replace(/^p:/,'');if(code.length!==144)return null;const c=document.createElement('canvas');c.width=c.height=14;const o=c.getContext('2d');
  for(const [ox,oy] of [[0,1],[2,1],[1,0],[1,2]])for(let i=0;i<144;i++)if(parseInt(code[i],17)){o.fillStyle='#000';o.fillRect(i%12+ox,(i/12|0)+oy,1,1)}
@@ -68,16 +69,16 @@ function spr(code){code=(code||'').replace(/^p:/,'');if(code.length!==144)return
 async function getJSON(u){const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
 async function listRaces(){try{const a=await getJSON('races/index.json');return [...new Set(a.map(String))].filter(d=>/^\d{8}$/.test(d)).sort().reverse()}catch(e){return []}}
 function paint(d,R){
- const res=R.result||null,top=res&&res.top||[],w=top[0],apps=R.apps||R.list.reduce((s,e)=>s+(e.n||1),0),jobs=R.jobs||R.list.length;
- const look=w&&(R.list.find(e=>e.job===w.job)||{}).look;
+ const res=R.result||null,top=res&&res.top||[],w=top[0],apps=R.apps||R.list.reduce((s,e)=>s+(e.n||1),0),jobs=R.jobs||new Set(R.list.map(e=>String(e.job).toLowerCase().replace(/[\s·()・,.\-]/g,''))).size;
+ const look=w&&(w.look||(R.list.find(e=>e.job===w.job)||{}).look);
  let h=`<div class="date">${fmt(d)} 경기</div><div class="q">${R.last?'꼴찌가 당첨된 직업은?':'1등으로 골인한 직업은?'}</div>`;
- if(w){h+=`<div class="win"><div class="lb">우승</div><div class="job">${esc(w.job)}</div><div class="sub">신청 ${w.n||1}명 · 직업도감이 다음 편으로 만들어요</div>${w.ids&&w.ids.length?`<div class="ids">${ids(w)}</div>`:''}</div>`;
-  h+=`<div class="grid2">${[1,2].map(i=>top[i]?`<div class="card"><div class="lb">${i+1}등</div><div class="job">${esc(top[i].job)}</div><div class="sub">신청 ${top[i].n||1}명</div></div>`:'').join('')}</div>`;
-  if(res.bad)h+=`<div class="card bad"><div class="lb">불운상 · 번개·함정을 가장 많이 맞은 직업</div><div class="job">${esc(res.bad.job)}</div><div class="sub">번개 ${res.bad.light||0}번 · 함정 ${res.bad.trap||0}번</div></div>`}
+ if(w){h+=`<div class="win"><div class="lb">우승</div><div class="job">${esc(w.job)}</div><div class="sub">${who(w)?who(w)+' 님 신청 · ':''}직업도감이 다음 편으로 만들어요</div>${(w.k||w.n||1)>1?`<div class="ids">같은 직업 신청 ${w.k||w.n}명</div>`:''}</div>`;
+  h+=`<div class="grid2">${[1,2].map(i=>top[i]?`<div class="card"><div class="lb">${i+1}등</div><div class="job">${esc(top[i].job)}</div><div class="sub">${who(top[i])||'&nbsp;'}</div></div>`:'').join('')}</div>`;
+  if(res.bad)h+=`<div class="card bad"><div class="lb">불운상 · 번개·함정을 가장 많이 맞은 사람</div><div class="job">${esc(res.bad.job)}</div><div class="sub">${who(res.bad)?who(res.bad)+' · ':''}번개 ${res.bad.light||0}번 · 함정 ${res.bad.trap||0}번</div></div>`}
  else h+=`<div class="empty">이 경기 기록에는 결과가 없어요. 다시보기로 확인해 주세요.</div>`;
- h+=`<div class="stats"><div><b>${apps.toLocaleString()}</b><span>참가(신청한 사람)</span></div><div><b>${jobs.toLocaleString()}</b><span>출전 직업(공)</span></div></div>`;
+ h+=`<div class="stats"><div><b>${apps.toLocaleString()}</b><span>참가(공)</span></div><div><b>${jobs.toLocaleString()}</b><span>서로 다른 직업</span></div></div>`;
  h+=`<div class="btns"><a class="btn" href="pinball.html?replay=${d}">경기 다시보기</a><a class="btn g" href="event.html">다음 경기 참가하기</a></div>`;
- if(top.length){h+=`<h2>직업별 순위</h2><ol>${top.slice(0,20).map((x,i)=>`<li><i>${i+1}</i><b>${esc(x.job)}${x.ids&&x.ids.length?`<small>${ids(x)}</small>`:''}</b><span>신청 ${x.n||1}명</span></li>`).join('')}</ol>`}
+ if(top.length){h+=`<h2>최종 순위 상위 20</h2><ol>${top.slice(0,20).map((x,i)=>`<li><i>${i+1}</i><b>${esc(x.job)}${who(x)?`<small>${who(x)}</small>`:''}</b><span>${(x.k||x.n||1)>1?`같은 직업 ${x.k||x.n}명`:''}</span></li>`).join('')}</ol>`}
  $('main').innerHTML=h;const c=spr(look);if(c){c.setAttribute('aria-label','우승 직업 캐릭터');$('main').querySelector('.win').appendChild(c)}}
 (async()=>{const q=new URLSearchParams(location.search).get('race'),list=await listRaces();let d=q&&/^\d{8}$/.test(q)?q:list[0];
  if(list.length){$('pastH').hidden=false;$('past').innerHTML=list.slice(0,20).map(x=>`<a href="?race=${x}"${x===d?' class="on"':''}>${+x.slice(4,6)}/${+x.slice(6)}</a>`).join('')}
