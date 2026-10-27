@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>랜덤 핀볼 결과</title>
+<meta name="description" content="직업도감 랜덤 핀볼 경기 결과: 우승 직업, 2·3등, 불운상, 직업별 순위">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--night:#0d1426;--navy:#1C2440;--navy2:#26304f;--ink:#10121A;--text:#E9EDF7;--muted:#9FB0CE;--yellow:#FFD23F;--red:#FF5A5A;--blue:#4C8DFF;--green:#5BE38A}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--night);color:var(--text);font-family:Pretendard,system-ui,-apple-system,sans-serif}
+body{padding:16px 16px 48px}
+.wrap{max-width:560px;margin:0 auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.tag{background:var(--yellow);color:var(--ink);font-weight:800;font-size:14px;padding:5px 10px;text-decoration:none}
+.date{color:var(--muted);font-size:14px}
+h1{font-size:20px;margin:0}
+.q{display:inline-block;background:var(--ink);color:#fff;font-weight:700;font-size:16px;padding:8px 12px;margin:6px 0 10px}
+.win{background:var(--navy);padding:20px 18px;position:relative;overflow:hidden}
+.win .lb{font-weight:800;color:var(--muted);font-size:14px}
+.win .job{font-weight:900;font-size:clamp(40px,12vw,64px);line-height:1.05;color:var(--yellow);text-shadow:4px 4px 0 var(--ink);word-break:keep-all;margin:6px 0 10px}
+.win .sub{font-size:15px;color:var(--text)}
+.win .ids{font-size:13px;color:var(--muted);margin-top:4px;word-break:break-all}
+.win canvas{position:absolute;right:14px;top:14px;width:64px;height:64px;image-rendering:pixelated}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.card{background:var(--navy);padding:14px;min-width:0}
+.card .lb{font-size:13px;font-weight:800;color:var(--muted)}
+.card .job{font-size:22px;font-weight:900;margin:4px 0 2px;word-break:keep-all;overflow-wrap:anywhere}
+.card .sub{font-size:13px;color:var(--muted)}
+.bad{margin-top:10px}
+.bad .job{color:#C9B6FF}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.stats div{background:var(--navy2);padding:12px;text-align:center}
+.stats b{display:block;font-size:26px;font-weight:900;color:var(--yellow)}
+.stats span{font-size:13px;color:var(--muted)}
+.btns{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap}
+.btn{flex:1;min-width:150px;text-align:center;background:var(--yellow);color:var(--ink);font-weight:800;font-size:16px;padding:14px 10px;text-decoration:none}
+.btn.g{background:transparent;color:var(--text);box-shadow:inset 0 0 0 2px var(--navy2)}
+h2{font-size:17px;margin:22px 0 10px}
+ol{list-style:none;margin:0;padding:0}
+ol li{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;background:var(--navy);padding:10px 12px;margin-bottom:6px}
+ol li i{font-style:normal;font-weight:900;color:var(--muted);text-align:center}
+ol li:nth-child(1) i{color:var(--yellow)}ol li:nth-child(2) i{color:#8FE3FF}ol li:nth-child(3) i{color:#FF9EC0}
+ol li b{font-weight:800;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ol li small{display:block;font-weight:500;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ol li span{font-size:13px;color:var(--muted);white-space:nowrap}
+.past{display:flex;flex-wrap:wrap;gap:6px}
+.past a{color:var(--text);text-decoration:none;background:var(--navy2);padding:6px 10px;font-size:14px}
+.past a.on{background:var(--yellow);color:var(--ink);font-weight:800}
+.empty{background:var(--navy);padding:24px;text-align:center;color:var(--muted)}
+.fine{color:var(--muted);font-size:12px;margin-top:20px;line-height:1.6}
+</style></head><body><div class="wrap">
+<div class="top"><h1>랜덤 핀볼 결과</h1><a class="tag" href="../">직업도감</a></div>
+<div id="main"><div class="empty">불러오는 중…</div></div>
+<h2 id="pastH" hidden>지난 경기</h2><div class="past" id="past"></div>
+<p class="fine">아이디는 일부만 보여요. 경기 영상과 다시보기는 같은 시드로 똑같이 재생돼요.</p>
+</div>
+<script>
+'use strict';
+const $=i=>document.getElementById(i);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const maskNick=s=>{s=String(s||'').trim();const a=[...s];return a.length<=2?(a[0]||'')+'*':a.slice(0,2).join('')+'***'};
+const SPAL=[null,'#000000','#1D2B53','#7E2553','#008751','#AB5236','#5F574F','#C2C3C7','#FFF1E8','#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#83769C','#FF77A8','#FFCCAA'];
+const fmt=d=>`${d.slice(0,4)}년 ${+d.slice(4,6)}월 ${+d.slice(6)}일`;
+const ids=x=>(x.ids||[]).slice(0,3).map(i=>'@'+esc(maskNick(i))).join(' ')+((x.n||1)>3?` 외 ${x.n-3}명`:'');
+function spr(code){code=(code||'').replace(/^p:/,'');if(code.length!==144)return null;const c=document.createElement('canvas');c.width=c.height=14;const o=c.getContext('2d');
+ for(const [ox,oy] of [[0,1],[2,1],[1,0],[1,2]])for(let i=0;i<144;i++)if(parseInt(code[i],17)){o.fillStyle='#000';o.fillRect(i%12+ox,(i/12|0)+oy,1,1)}
+ for(let i=0;i<144;i++){const v=parseInt(code[i],17);if(v){o.fillStyle=SPAL[v];o.fillRect(i%12+1,(i/12|0)+1,1,1)}}return c}
+async function getJSON(u){const r=await fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
+async function listRaces(){try{const a=await getJSON('races/index.json');return [...new Set(a.map(String))].filter(d=>/^\d{8}$/.test(d)).sort().reverse()}catch(e){return []}}
+function paint(d,R){
+ const res=R.result||null,top=res&&res.top||[],w=top[0],apps=R.apps||R.list.reduce((s,e)=>s+(e.n||1),0),jobs=R.jobs||R.list.length;
+ const look=w&&(R.list.find(e=>e.job===w.job)||{}).look;
+ let h=`<div class="date">${fmt(d)} 경기</div><div class="q">${R.last?'꼴찌가 당첨된 직업은?':'1등으로 골인한 직업은?'}</div>`;
+ if(w){h+=`<div class="win"><div class="lb">우승</div><div class="job">${esc(w.job)}</div><div class="sub">신청 ${w.n||1}명 · 직업도감이 다음 편으로 만들어요</div>${w.ids&&w.ids.length?`<div class="ids">${ids(w)}</div>`:''}</div>`;
+  h+=`<div class="grid2">${[1,2].map(i=>top[i]?`<div class="card"><div class="lb">${i+1}등</div><div class="job">${esc(top[i].job)}</div><div class="sub">신청 ${top[i].n||1}명</div></div>`:'').join('')}</div>`;
+  if(res.bad)h+=`<div class="card bad"><div class="lb">불운상 · 번개·함정을 가장 많이 맞은 직업</div><div class="job">${esc(res.bad.job)}</div><div class="sub">번개 ${res.bad.light||0}번 · 함정 ${res.bad.trap||0}번</div></div>`}
+ else h+=`<div class="empty">이 경기 기록에는 결과가 없어요. 다시보기로 확인해 주세요.</div>`;
+ h+=`<div class="stats"><div><b>${apps.toLocaleString()}</b><span>참가(신청한 사람)</span></div><div><b>${jobs.toLocaleString()}</b><span>출전 직업(공)</span></div></div>`;
+ h+=`<div class="btns"><a class="btn" href="pinball.html?replay=${d}">경기 다시보기</a><a class="btn g" href="event.html">다음 경기 참가하기</a></div>`;
+ if(top.length){h+=`<h2>직업별 순위</h2><ol>${top.slice(0,20).map((x,i)=>`<li><i>${i+1}</i><b>${esc(x.job)}${x.ids&&x.ids.length?`<small>${ids(x)}</small>`:''}</b><span>신청 ${x.n||1}명</span></li>`).join('')}</ol>`}
+ $('main').innerHTML=h;const c=spr(look);if(c){c.setAttribute('aria-label','우승 직업 캐릭터');$('main').querySelector('.win').appendChild(c)}}
+(async()=>{const q=new URLSearchParams(location.search).get('race'),list=await listRaces();let d=q&&/^\d{8}$/.test(q)?q:list[0];
+ if(list.length){$('pastH').hidden=false;$('past').innerHTML=list.slice(0,20).map(x=>`<a href="?race=${x}"${x===d?' class="on"':''}>${+x.slice(4,6)}/${+x.slice(6)}</a>`).join('')}
+ if(!d){$('main').innerHTML='<div class="empty">아직 공개된 경기가 없어요.</div>';return}
+ try{paint(d,await getJSON(`races/race_${d}.json`));document.title=`랜덤 핀볼 결과 · ${fmt(d)}`}catch(e){$('main').innerHTML=`<div class="empty">${fmt(d)} 경기 기록을 찾지 못했어요.</div>`}})();
+</script></body></html>

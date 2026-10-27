@@ -162,7 +162,7 @@ function drawHUD(now,ord,live){
  if(run&&!ended){const y0=finalT>0?94:66;const vis=klog.filter(e=>VT-e.t<3.4).slice(-3);const maxW=finalT>0?W-12:W-140;
   vis.forEach((e,i)=>{const y=y0+i*14,k=VT-e.t,a=k<.15?k/.15:k>3?1-(k-3)/.4:1;g.globalAlpha=cl(a,0,1);const t=fitText(e.msg,9,'G9',maxW-16);const w=tw(t,9,'G9')+14;px(4,y-6,w,13,'rgba(0,0,0,.72)');px(4,y-6,3,13,KC[e.kind]||P.wh);if(e.kind==='light')bolt(9,y-4,P.ye);else if(e.kind==='bomb')px(9,y-2,4,4,P.rd);ptext(t,e.kind==='light'||e.kind==='bomb'?16:10,y,9,P.wh,'left','G9');g.globalAlpha=1})}
  // 순위
- if(run&&!ended&&finalT<0){const n=Math.min(5,ord.length);frameBox(W-122,62,116,20+n*16,P.bl);ptext(lastMode?'꼴찌 순위':'RANK',W-64,72,9,P.lg,'center','G9');const list=lastMode?ord.filter(b=>!b.out).reverse():ord;
+ if(run&&!ended&&finalT<0&&simT>0){const n=Math.min(5,ord.length);frameBox(W-122,62,116,20+n*16,P.bl);ptext(lastMode?'꼴찌 순위':'RANK',W-64,72,9,P.lg,'center','G9');const list=lastMode?ord.filter(b=>!b.out).reverse():ord;
   for(let i=0;i<n;i++){const b=list[i];if(!b)break;const y=88+i*16;circ(W-110,y,4,b.c);ptext(`${i+1}`,W-100,y,9,i===0?P.ye:P.wh,'left','G9');ptext(fitText(nick(b),9,'G9',78),W-91,y,9,i===0?P.ye:P.wh,'left','G9')}}
  if(run)stageBar(live);
  if(run&&simT>0&&!ended)minimap(live);
@@ -173,7 +173,9 @@ function drawHUD(now,ord,live){
  if(elimShow&&VT>=elimShow.t&&VT-elimShow.t<2&&!ended){const k=VT-elimShow.t,e=k<.3?EIN(k/.3):k>1.6?1-EOUT((k-1.6)/.4):1;g.globalAlpha=e;frameBox(30,236,W-60,44,P.rd);ptext('탈락존!',W/2,250,14,P.ye,'center','G14');ptext(`하위 ${elimShow.k}명 정리 · ${elimShow.left}명 생존`,W/2,268,9,P.wh,'center','G9');g.globalAlpha=1}
  // 카운트다운
  if(state==='run'&&simT<0.6){const c=simT<0?Math.ceil(-simT):0;const k=simT<0?1-((-simT)%1):simT/.6;const s=1+(1-EIN(Math.min(1,k*1.6)))*1.2;g.save();g.translate(W/2,H/2);g.scale(s,s);g.globalAlpha=1-EOUT(cl((k-.6)/.4,0,1));ptext(c?String(c):'GO!',0,0,c?48:40,c?P.wh:P.gr,'center','G14');g.restore()
-  if(simT<0){frameBox(28,H/2+50,W-56,46,P.pk);ptext('직접 그린 캐릭터 레이스!',W/2,H/2+64,11,P.wh,'center','G11');ptext(lastMode?'꼴찌 직업이 다음 영상 주인공':'1등 직업이 다음 영상 주인공',W/2,H/2+81,11,P.ye,'center','G11')}}
+  if(simT<0){const k=simT+3.4,i=EIN(cl(k/.35,0,1)),o=EOUT(cl((k-3.0)/.4,0,1)),a=i*(1-o);if(a>0){g.save();g.globalAlpha=a;g.translate(-(1-i)*40+o*30,0);
+   px(0,150,W,30,'rgba(0,0,0,.88)');ptext(PRACTICE?'연습 경기':(lastMode?'꼴찌 직업이 다음 영상 주인공':'1등 직업이 다음 영상 주인공'),16,165,11,P.wh,'left','G11');
+   ptext(PRACTICE?'예시 직업':`참가 ${INFO.apps}명`,16,206,26,P.wh,'left','G14');ptext(`직업 ${INFO.jobs}개 출전!`,16,240,26,P.ye,'left','G14');g.restore();g.globalAlpha=1}}}
  // FINAL
  if(finalT>0&&!ended){const beat=Math.pow(Math.max(0,Math.sin((simT-finalT)*8)),5);g.fillStyle=`rgba(255,0,77,${.2+.32*beat})`;for(let y=0;y<H-28;y+=4)for(let x=0;x<W;x+=4){const d=Math.min(x,W-x,y,H-28-y);if(d<22&&((x+y)/4)%2===0)g.fillRect(x,y,2,2)}
   const k=EIN(cl((simT-finalT)/.5,0,1));frameBox(W/2-80,62+(1-k)*-70,160,26,P.rd);ptext((Math.floor(now*5)%2?'!! ':'')+'FINAL LAP'+(Math.floor(now*5)%2?' !!':''),W/2,75+(1-k)*-70,12,P.wh,'center','G11');
@@ -195,13 +197,16 @@ function drawEnding(now){const tt=VT-winVT,E=ending;
   ptext(winner.name,0,0,winner.name.length>7?16:22,P.wh,'center','G14');ptext(`신청 ${winner.n}명`,0,28,12,P.cy,'center','G11');if(winner.ids.length)ptext(fitText(winner.ids.slice(0,3).map(x=>'@'+maskNick(x)).join(' ')+(winner.ids.length>3?` 외 ${winner.n-3}명`:''),9,'G9',270),0,46,9,P.lg,'center','G9');ptext('직업도감이 만들어요!',0,70,12,P.ye,'center','G11');
   ptext(`기록 ${winner.doneT.toFixed(2)}초 · 번개 ${winner.light}번`,0,96,9,P.lg,'center','G9');g.restore();g.globalAlpha=1}
  // 불운상(WINNER 카드 뒤)
- if(E.bad&&tt>E.badIn&&tt<E.ctaIn+.3){const b=E.bad,e=cardIn(tt-E.badIn),out=cl((tt-E.ctaIn)/.3,0,1);g.save();g.translate(W/2+(1-e)*W-out*W,H*.46);frameBox(-140,-110,280,220,P.la);
+ if(E.bad&&tt>E.badIn&&tt<E.badOut+.3){const b=E.bad,e=cardIn(tt-E.badIn),out=cl((tt-E.badOut)/.3,0,1);g.save();g.translate(W/2+(1-e)*W-out*W,H*.46);frameBox(-140,-110,280,220,P.la);
   ptext('불운상',0,-84,22,P.la,'center','G14');ptext('번개·함정을 가장 많이 맞은 사람',0,-62,9,P.lg,'center','G9');
   for(let i=0;i<5;i++)px(-20+i*9,-44+((i*7+Math.floor(now*14))%9),1,4,P.bl);px(-24,-50,48,6,P.dk);px(-18,-54,30,5,P.dk);
   drawChar({x:0,y:-14,r:16,c:b.c,look:b.look,spr:b.spr,face:1},b.spr?2.3:1);
   ptext(b.name,0,24,13,P.wh,'center','G11');ptext(subl(b),0,42,10,P.lg,'center','G9');
   ptext(`번개 ${b.light}번 · 함정 ${b.trap}번`,0,66,11,P.ye,'center','G11');ptext('그래도 끝까지 굴렀다!',0,88,9,P.pk,'center','G9');g.restore()}
  // 엔딩 문구
+ if(E.next&&tt>E.nextIn&&tt<E.ctaIn+.3){const e=cardIn(tt-E.nextIn),out=EOUT(cl((tt-E.ctaIn)/.3,0,1));g.globalAlpha=e*(1-out);px(0,0,W,H,'rgba(4,2,12,.9)');g.save();g.globalAlpha=1-out;g.translate(W/2+(1-e)*W,H*.46);
+  px(-W/2,-70,W,30,'rgba(0,0,0,.9)');ptext('다음 직업도감은',0,-55,12,P.wh,'center','G11');const nm=winner.name;ptext(nm+'!',0,-6,nm.length>6?24:32,P.ye,'center','G14');
+  frameBox(-70,30,140,28,P.ye);ptext('곧 공개',0,44,13,P.ye,'center','G11');g.restore();g.globalAlpha=1}
  if(tt>E.ctaIn){const e=cardIn(tt-E.ctaIn);g.globalAlpha=e;px(0,0,W,H,'rgba(4,2,12,.93)');g.globalAlpha=1;g.save();g.translate(0,(1-e)*40);
   ptext('다음 핀볼 참가자 모집',W/2,170,11,P.cy,'center','G11');
   ptext('댓글로 직업 남기면',W/2,222,22,P.wh,'center','G14');ptext('다음 핀볼에 출전!',W/2,256,22,P.ye,'center','G14');
@@ -253,22 +258,22 @@ function groupJobs(list){const m=new Map();let ex=0;const exJ=new Set();
 function updInfo(pre=''){const q=groupJobs(parseList($('list').value));msg((pre?pre+' · ':'')+`신청 ${q.apps}건 → 직업 ${q.list.length}개(공 ${q.list.length}개)`+(q.ex?` · 이미 만든 직업 ${q.exJobs}개(${q.ex}건) 제외`:''));return q}
 $('list').addEventListener('input',()=>updInfo());
 loadMade();
-const ADMIN=QS.get('admin')==='1',OFFLINE=QS.get('offline')==='1';let REPLAY=null,RACE=null;
+const ADMIN=QS.get('admin')==='1',OFFLINE=QS.get('offline')==='1';let REPLAY=null;
 // 연습 모드 예시 직업(공개 화면 기본)
 const PJ=['피아니스트','한의사','농구선수','초등교사','플로리스트','제빵사','래퍼','특수교사','외교관','댄서','사육사','수능 출제위원','배드민턴 선수','항공기 정비사','치어리더','음반기획자','골프선수','측량사','네일아티스트','심판','기상캐스터','소방관','웹소설 작가','e스포츠 코치','간호사','경찰관','수의사','건축가','바리스타','프로게이머','성우','큐레이터','조향사','파일럿','셰프','변호사','유튜버','작곡가','마술사','천문학자','소믈리에','웹툰작가','로봇공학자','스턴트맨','동물조련사','해양생물학자','기관사','버스기사','택배기사','환경미화원','약사','치과의사','물리치료사','영양사','사서','학예사','고고학자','지질학자','기상학자','우주비행사','게임기획자','애니메이터','작가','기자','아나운서','PD','촬영감독','조명감독','음향감독','배우','가수','무용가','지휘자','바이올리니스트','드러머','DJ','패션디자이너','모델','헤어디자이너','메이크업 아티스트','플로리스트 강사','도예가','목수','용접공','전기기사','배관공','정원사','농부','어부','양봉가','제과제빵사','바텐더','호텔리어','여행가이드','통역사','번역가','외교관 비서','검사','판사','법무사','회계사','세무사','은행원','증권분석가','보험설계사','부동산중개사','공인중개사 보조','프로그래머','해커','데이터분석가','인공지능 연구원','로봇 수리공','드론 조종사','자동차 정비사','항해사','등대지기','산림감시원','국립공원 레인저','수영강사','태권도 사범','축구심판','야구선수','e스포츠 해설가'];
 function practiceList(n){return PJ.slice(0,Math.min(n,PJ.length)).map((j,i)=>({job:j,n:1,id:'',ids:[],look:''}))}
-function curList(){if(REPLAY)return REPLAY.list;if((ADMIN||OFFLINE)&&$('list').value.trim())return groupJobs(parseList($('list').value)).list;return practiceList(+($('pn')&&$('pn').value)||24)}
+function curList(){PRACTICE=false;if(REPLAY){INFO={apps:REPLAY.apps||REPLAY.list.reduce((s,e)=>s+(e.n||1),0),jobs:REPLAY.list.length};return REPLAY.list}if((ADMIN||OFFLINE)&&$('list').value.trim()){const q=groupJobs(parseList($('list').value));INFO={apps:q.list.reduce((s,e)=>s+(e.n||1),0),jobs:q.list.length};return q.list}PRACTICE=true;const l=practiceList(+($('pn')&&$('pn').value)||24);INFO={apps:l.length,jobs:l.length};return l}
 const ymd=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')};
 function startRace(seed){const list=curList();if(list.length<2){msg('직업을 2개 이상 넣어 주세요(이미 만든 직업은 빠져요)');return false}
  if(seed==null)seed=REPLAY?REPLAY.seed:1+Math.floor(Math.random()*2147483000);R=seedRand(seed);VR=seedRand(seed+99);
  if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;build();makeBalls(list);simT=-3.4;acc=0;cam={x:500,y:120,z:1};stageShow={i:-1,t:-9};stageLog=[];timers=[];meteorZone.next=3;state='run';$('panel').style.display='none';
  // 기록(다시보기용): 직업별 공 목록·가린 아이디·캐릭터 코드·시드
- RACE={v:1,date:ymd(),seed,last:lastMode,list:list.map(e=>({job:e.job,n:e.n||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
+ RACE={v:2,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
  applyFind();
  const t=aNow();if(t!=null){[0,1,2].forEach(i=>tone(440,t+.4+i,.14,'square',.06));tone(880,t+3.4,.3,'square',.07);later(3.4,musicStart)}return true}
 $('start').onclick=()=>startRace();
 // 경기 기록 저장(관리 모드)
-$('save').onclick=()=>{if(!RACE){msg('먼저 START로 경기를 돌려 주세요');return}const bl=new Blob([JSON.stringify(RACE)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=`race_${RACE.date}.json`;document.body.appendChild(a);a.click();a.remove();msg(`race_${RACE.date}.json 저장됨 · 사이트 pinball/races/ 에 올리면 pinball.html?replay=${RACE.date}`)};
+$('save').onclick=()=>{if(!RACE){msg('먼저 START로 경기를 돌려 주세요');return}if(!RACE.result&&!confirm('경기가 아직 안 끝나서 결과(1·2·3등·불운상)가 빠져요. 그래도 저장할까요?'))return;const bl=new Blob([JSON.stringify(RACE)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=`race_${RACE.date}.json`;document.body.appendChild(a);a.click();a.remove();msg(`race_${RACE.date}.json 저장됨 · 사이트 pinball/races/ 에 올리면 pinball.html?replay=${RACE.date}`)};
 // 다시보기
 async function loadReplay(d){try{const r=await fetch(`races/race_${d}.json?${Date.now()}`,{cache:'no-store'});if(!r.ok)throw 0;REPLAY=await r.json();$('pmode').textContent=`${+d.slice(4,6)}월 ${+d.slice(6)}일 경기 다시보기 · 직업 ${REPLAY.list.length}개`;$('start').textContent='▶ 다시보기 시작';$('practice').style.display='none';msg('')}catch(e){msg('그 날짜 경기 기록을 찾지 못했어요')}}
 async function loadRaces(){let ds=[];try{const r=await fetch('races/index.json?'+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;ds=await r.json()}catch(e){try{const a=await (await fetch('https://api.github.com/repos/jobdogam/jobdogam.github.io/contents/pinball/races')).json();ds=Array.isArray(a)?a.map(f=>(String(f.name).match(/^race_(\d{8})\.json$/)||[])[1]).filter(Boolean):[]}catch(e2){}}

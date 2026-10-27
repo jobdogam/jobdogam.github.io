@@ -144,6 +144,10 @@ const WB={r:9,cx:500,cy:GOAL_Y-56,ax:16,ay:12};
 function wbPos(t){const a=t*Math.PI;return{x:WB.cx+Math.cos(a)*WB.ax,y:WB.cy+Math.sin(a)*WB.ay}}
 function pistonExt(p,t){const q=((t+p.ph)%1.6+1.6)%1.6;if(q<1.0)return 0;if(q<1.08)return (q-1.0)/.08*p.max;if(q<1.35)return p.max;return p.max*(1-(q-1.35)/.25)}
 let meteorZone=null,lightning=null,web=null,bomb=null;
+// 경기 정보(인트로·결과 기록): PRACTICE=연습 경기, RACE=다시보기·결과 기록
+let PRACTICE=false,RACE=null,INFO={apps:0,jobs:0};
+const pubB=b=>({job:b.name,n:b.n||1,ids:(b.ids||[]).slice(0,3).map(maskNick)});
+function recordResult(){const o=rankOrder().filter(b=>!b.out||true);const top=o.slice(0,20).map(pubB);const bd=ending&&ending.bad;RACE.result={top,winT:+winT.toFixed(2),bad:bd?{...pubB(bd),light:bd.light,trap:bd.trap}:null,boss:boss.dead>=0}}
 // ================= 공 =================
 let balls=[],fin=[],state='idle',simT=0,winner=null,winT=-1,winVT=-1,finalT=-1,lastMode=false,cam={x:500,y:120,z:1};
 let leadCur=null,leadCand=null,leadN=0,leadShow=null,lastLeadAnn=-9,focus={b:null,until:0,msg:'',kind:''},nextSpot=6,stageShow={i:-1,t:-9},klog=[],photo=null,ending=null,elimCP=[],elimShow=null,musicCut=false;
@@ -296,7 +300,8 @@ function onFinish(b){
   const cardIn=photo?2.9:.7;
   // 불운상: 번개·함정 최다 피격자
   let bad=null;for(const c of balls){const h=c.light+c.trap;if(h>0&&(!bad||h>bad.light+bad.trap||(h===bad.light+bad.trap&&bad===b)))bad=c}
-  const badIn=cardIn+3.2,ctaIn=badIn+(bad?2.5:0);ending={cardIn,bad,badIn,ctaIn,end:ctaIn+2.8};
+  // 우승 카드 → 불운상 → (공식 경기만) 다음 직업 예고 → 엔딩 문구
+  const nx=!PRACTICE&&!lastMode;const badIn=cardIn+2.9,nextIn=badIn+(bad?2.2:0),ctaIn=nextIn+(nx?2.4:0);ending={cardIn,bad,badIn,badOut:nx?nextIn:ctaIn,next:nx,nextIn,ctaIn,end:ctaIn+2.5};
   later(cardIn-.4,fanfare);if(bad)later(badIn,()=>{sfx(220,.25,'triangle',.06,-110);later(.25,()=>sfx(165,.4,'triangle',.06,-80))});later(ctaIn,()=>{sfx(784,.1,'square',.05);later(.12,()=>sfx(1046,.16,'square',.05))})}
  else sfx(988,.06,'square',.04)}
 // 진행도: 높이(골인한 공은 맨 앞, 탈락한 공은 맨 뒤)
@@ -304,7 +309,7 @@ function prog(b){return b.done?1e6-b.rank:b.out?-1e6:b.y}
 function rankOrder(){return balls.slice().sort((a,c)=>prog(c)-prog(a))}
 
 // ================= 감독(연출)·카메라 =================
-let slow=1,acc=0,stageLog=[];const SPD=1.3; // 전체 진행 속도(1분 안팎 맞춤)
+let slow=1,acc=0,stageLog=[];const SPD=1.35; // 전체 진행 속도(1분 안팎 맞춤)
 function update(dt){
  VT+=dt;
  if(timers.length){const due=timers.filter(t=>t.t<=VT);if(due.length){timers=timers.filter(t=>t.t>VT);due.forEach(t=>t.fn())}}
@@ -329,7 +334,7 @@ function update(dt){
  if(winner){const tt=VT-winVT;slow=tt<1.6?.15+.85*EIN(tt/1.6):1}
  else if(finalT>0)slow=live.length&&live[0].y>GOAL_Y-170?.5:1;
  else if(focus.b&&simT<focus.until&&(focus.kind==='light'||focus.kind==='boss'))slow=.6;else slow=1;
- if(ending&&VT-winVT>ending.cardIn+.5)slow=0; // 카드가 뜨면 물리 멈춤
+ if(ending&&VT-winVT>ending.cardIn+.5){slow=0;if(RACE&&!RACE.result)recordResult()} // 카드가 뜨면 물리 멈춤
  acc+=dt*slow*(simT<0?1:SPD);const h=1/240;let n=0;while(acc>=h&&n<24){stepSim(h);acc-=h;n++}
  let tx=cam.x,ty=cam.y,tz=1;
  if(simT<0){tx=500;ty=120}
