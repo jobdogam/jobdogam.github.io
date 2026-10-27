@@ -35,13 +35,15 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 .ch.x{opacity:.45}
 .scroll{max-height:420px;overflow:auto}
 .err{color:var(--pk)}
-@media (max-width:520px){th:nth-child(4),td:nth-child(4){display:none}}
+@media (max-width:520px){#tJobs td:nth-child(5),thead th:nth-child(5){display:none}}
+.sus{color:var(--pk);font-size:11px}
 </style></head><body><div id="gate" style="max-width:320px;margin:20vh auto;text-align:center"><h1>관리 페이지</h1><p style="color:var(--sub);font-size:14px">비밀번호를 입력하세요</p><input id="pw" type="password" inputmode="numeric" autocomplete="off" style="width:100%;background:#0e121b;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:12px;font:inherit;text-align:center;font-size:20px;letter-spacing:6px"><p id="pwMsg" class="err" style="min-height:20px"></p><button id="pwGo" type="button" style="width:100%">들어가기</button></div><div class="wrap" id="main" hidden>
 <h1>랜덤 핀볼 신청 현황</h1>
 <div class="upd" id="upd">불러오는 중…</div>
 <div class="kpi">
- <div class="k"><b id="kRows">-</b><span>신청 건수</span></div>
- <div class="k"><b id="kIds">-</b><span>참가자(아이디 중복 제외)</span></div>
+ <div class="k"><b id="kRows">-</b><span>원래 신청 수(시트 그대로)</span></div>
+ <div class="k"><b id="kIds">-</b><span>아이디 수(같은 아이디는 마지막 1건)</span></div>
+ <div class="k"><b id="kVotes">-</b><span>걸러진 표 수(묶음 1표)</span></div>
  <div class="k"><b id="kJobs">-</b><span>경기에 나갈 직업(공 개수)</span></div>
  <div class="k"><b id="kMade">-</b><span>이미 만든 직업이라 제외</span></div>
  <div class="k"><b id="kDraw">-</b><span>캐릭터 직접 그림</span></div>
@@ -49,9 +51,13 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 <div class="box"><h2>경기 돌리기</h2>
  <div class="row"><a class="btn" href="pinball.html?admin=1" target="_blank" rel="noopener">게임 열기(관리 모드)</a><span style="color:var(--sub);font-size:13px">'이벤트 신청 불러오기' → START → 끝나면 '경기 기록 저장'(race_날짜.json을 pinball/races/에 올리고 races/index.json에 날짜 추가).</span></div>
 </div>
-<div class="box"><h2>직업별 (공 1개씩)</h2>
+<div class="box"><h2>의심 묶음 (묶음당 1표·게임엔 1명만)</h2>
+ <p style="color:var(--sub);font-size:13px;margin:0 0 8px">같은 직업이 20초 안 간격으로 4건 이상 연달아 들어오거나, 10분 안에 아이디가 한 글자만 다르거나, 막 친 아이디(모음 거의 없음) 둘이 같은 그림(기본·랜덤 틀 제외)이면 한 사람으로 봐요. 시트 원본은 그대로예요.</p>
+ <div class="scroll"><table><thead><tr><th>시각대</th><th>직업</th><th>건수</th><th>아이디</th><th>이유</th></tr></thead><tbody id="tSus"></tbody></table></div>
+</div>
+<div class="box"><h2>직업별 (걸러진 표 순)</h2>
  <div class="row"><input type="search" id="qJob" placeholder="직업 검색"><button class="ghost" id="reload" type="button">새로고침</button></div>
- <div class="scroll"><table><thead><tr><th>#</th><th>직업</th><th>신청</th><th></th></tr></thead><tbody id="tJobs"></tbody></table></div>
+ <div class="scroll"><table><thead><tr><th>#</th><th>직업</th><th>표</th><th>원래</th><th></th></tr></thead><tbody id="tJobs"></tbody></table></div>
 </div>
 <div class="box"><h2>참가 캐릭터</h2>
  <div class="row"><input type="search" id="qCh" placeholder="아이디·직업 검색"></div>
@@ -59,6 +65,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 </div>
 <div class="box"><h2>최근 신청</h2><div class="scroll"><table><thead><tr><th>시각</th><th>아이디</th><th>직업</th><th></th></tr></thead><tbody id="tRecent"></tbody></table></div></div>
 </div>
+<script src="pbfilter.js"></script>
 <script>
 'use strict';
 const G='https://docs.google.com/spreadsheets/d/18XwQDvv-OFtv9NA1V1a9SiSLaR6oFu5gNjZfZsZ7qRg/gviz/tq?gid=470754975&tqx=out:csv&tq=';
@@ -68,33 +75,38 @@ const norm=s=>String(s||'').toLowerCase().replace(/[\s·()・,.\-]/g,'');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function parseCSV(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(q){if(ch=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(f);f=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&s[i+1]=='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=ch}if(f||row.length){row.push(f);out.push(row)}return out}
 function sprite(code){const c=document.createElement('canvas');c.width=12;c.height=12;const x=c.getContext('2d');if(code&&code.length===144){for(let i=0;i<144;i++){const v=parseInt(code[i],17)||0;if(v){x.fillStyle=SPAL[v];x.fillRect(i%12,(i/12)|0,1,1)}}}else{x.fillStyle='#5F574F';x.beginPath();x.arc(6,6,5,0,7);x.fill()}return c}
-let MADE=new Set(),ENTRIES=[],JOBS=[];
+let MADE=new Set(),ENTRIES=[],JOBS=[],FR=null;
+const hm=s=>String(s||'').replace(/^.*?(오전|오후)/,'$1');
+function paintSus(){const b=(FR&&FR.bundles||[]).slice().sort((x,y)=>y.n-x.n||x.from.ts-y.from.ts);
+ $('tSus').innerHTML=b.length?b.map(g=>`<tr><td style="white-space:nowrap">${esc(hm(g.from.tsText))}<br>~ ${esc(hm(g.to.tsText))}</td><td>${esc(g.job)}</td><td class="n">${g.n}건 → 1표</td><td style="word-break:break-all">${g.members.slice(0,4).map(e=>'@'+esc(e.id)+(e.susp?'<span class="sus">(의심)</span>':'')).join(' ')}${g.n>4?` 외 ${g.n-4}`:''}</td><td>${esc(g.reasons.join(', '))}${g.susp?` · 막 친 아이디 ${g.susp}개`:''}</td></tr>`).join(''):'<tr><td colspan="5" style="color:var(--sub)">걸린 묶음이 없어요</td></tr>'}
 async function load(){
  $('upd').textContent='불러오는 중…';
  try{
   try{const m=await (await fetch('../made.json?'+Date.now())).json();MADE=new Set(m.map(norm))}catch(e){}
   const t=await (await fetch(G+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();
   const rows=parseCSV(t).slice(1).filter(r=>r.length>=3);
-  const byId=new Map();
-  for(const r of rows){const ts=r[0],job=(r[1]||'').trim(),pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,'').toLowerCase(),look=(pk[1]||'').replace(/^p:/,'');if(!id||job.length<2)continue;byId.set(id,{ts,job,id,look})}
-  ENTRIES=[...byId.values()];
+  const F=PBF.filter(rows);FR=F;
+  // 참가 캐릭터 = 묶음 대표 1명씩(게임에 나오는 그대로)
+  ENTRIES=F.groups.map(g=>({ts:g.rep.tsText,job:g.rep.job,id:g.rep.id,look:g.rep.look,n:g.n}));
   const jm=new Map();
-  for(const e of ENTRIES){const k=norm(e.job);e.made=MADE.has(k);if(!jm.has(k))jm.set(k,{name:e.job,n:0,made:e.made,ids:[]});const j=jm.get(k);j.n++;j.ids.push(e.id)}
-  JOBS=[...jm.values()].sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name));
+  for(const j of F.jobs){const made=MADE.has(j.key);jm.set(j.key,{name:j.job,n:j.votes,raw:j.raw,made})}
+  for(const e of ENTRIES)e.made=MADE.has(norm(e.job));
+  JOBS=[...jm.values()].sort((a,b)=>b.n-a.n||b.raw-a.raw||a.name.localeCompare(b.name));
   const live=JOBS.filter(j=>!j.made);
   $('kRows').textContent=rows.length.toLocaleString();
-  $('kIds').textContent=ENTRIES.length.toLocaleString();
+  $('kIds').textContent=F.entries.length.toLocaleString();
+  $('kVotes').textContent=F.groups.length.toLocaleString();
   $('kJobs').textContent=live.length.toLocaleString();
   $('kMade').textContent=JOBS.filter(j=>j.made).length+'개 · '+ENTRIES.filter(e=>e.made).length+'명';
   $('kDraw').textContent=ENTRIES.filter(e=>e.look.length===144).length.toLocaleString();
-  $('upd').textContent='마지막 갱신 '+new Date().toLocaleTimeString('ko-KR')+' · 1분마다 자동 갱신 · 같은 아이디는 마지막 신청만 셈';
-  paintJobs();paintCh();paintRecent(rows);
+  $('upd').textContent='마지막 갱신 '+new Date().toLocaleTimeString('ko-KR')+' · 1분마다 자동 갱신 · 같은 아이디는 마지막 신청만, 의심 묶음은 1표';
+  paintJobs();paintCh();paintRecent(rows);paintSus();
  }catch(e){$('upd').innerHTML='<span class="err">불러오지 못했어요. 새로고침을 눌러 주세요.</span>'}
 }
 function paintJobs(){const q=norm($('qJob').value),max=Math.max(1,...JOBS.map(j=>j.n));
- $('tJobs').innerHTML=JOBS.filter(j=>!q||norm(j.name).includes(q)).map((j,i)=>`<tr><td class="n">${i+1}</td><td>${esc(j.name)}${j.made?' <span class="made">이미 만듦 · 제외</span>':''}</td><td class="n">${j.n}</td><td style="width:35%"><div class="bar" style="width:${Math.round(j.n/max*100)}%;${j.made?'background:#444':''}"></div></td></tr>`).join('')}
+ $('tJobs').innerHTML=JOBS.filter(j=>!q||norm(j.name).includes(q)).map((j,i)=>`<tr><td class="n">${i+1}</td><td>${esc(j.name)}${j.made?' <span class="made">이미 만듦 · 제외</span>':''}</td><td class="n">${j.n}</td><td class="n" style="color:var(--sub)">${j.raw}</td><td style="width:35%"><div class="bar" style="width:${Math.round(j.n/max*100)}%;${j.made?'background:#444':''}"></div></td></tr>`).join('')}
 function paintCh(){const q=norm($('qCh').value),g=$('gCh');g.innerHTML='';
- for(const e of ENTRIES.slice().reverse()){if(q&&!norm(e.id+e.job).includes(q))continue;const d=document.createElement('div');d.className='ch'+(e.made?' x':'');d.appendChild(sprite(e.look));d.insertAdjacentHTML('beforeend',`<div class="jb">${esc(e.job)}</div><div class="id">@${esc(e.id)}</div>`);g.appendChild(d)}}
+ for(const e of ENTRIES.slice().reverse()){if(q&&!norm(e.id+e.job).includes(q))continue;const d=document.createElement('div');d.className='ch'+(e.made?' x':'');d.appendChild(sprite(e.look));d.insertAdjacentHTML('beforeend',`<div class="jb">${esc(e.job)}</div><div class="id">@${esc(e.id)}${e.n>1?` <span class="sus">외 ${e.n-1}(묶음)</span>`:''}</div>`);g.appendChild(d)}}
 function paintRecent(rows){$('tRecent').innerHTML=rows.slice(-50).reverse().map(r=>{const pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,''),made=MADE.has(norm(r[1]));return `<tr><td style="white-space:nowrap">${esc((r[0]||'').replace(/^\d+\. /,''))}</td><td>@${esc(id)}</td><td>${esc(r[1]||'')}</td><td>${made?'<span class="made">제외</span>':''}</td></tr>`}).join('')}
 $('qJob').addEventListener('input',paintJobs);$('qCh').addEventListener('input',paintCh);$('reload').onclick=load;
 const PH='e972c0584b62081a76f651221498ad8001bde72c8ec79afad63d3d7d73b7de49';
