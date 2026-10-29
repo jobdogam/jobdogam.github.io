@@ -6,7 +6,7 @@
 // 새 회차를 열 때: 아래 목록 끝에 한 줄 추가(n·date·kind·deadline·dl) — 맨 마지막 줄이 지금 받는 회차.
 window.PB_ROUNDS=[
  {n:1,date:'20261027',kind:'핀볼이벤트',deadline:'2026-10-27T22:00:59+09:00',dl:'10월 27일(화) 밤 10시',winner:'외교관'},
- {n:2,date:'20261029',kind:'핀볼이벤트2',deadline:'2026-10-29T22:00:59+09:00',dl:'10월 29일(목) 밤 10시'}
+ {n:2,date:'20261029',kind:'핀볼이벤트2',deadline:'2026-10-29T22:00:59+09:00',dl:'10월 29일(목) 밤 10시',winner:'f1엔지니어'}
 ];
 window.PB_ROUND=window.PB_ROUNDS[window.PB_ROUNDS.length-1];
 window.PB_ROUND.dlMs=Date.parse(window.PB_ROUND.deadline);
