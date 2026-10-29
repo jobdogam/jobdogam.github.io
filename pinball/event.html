@@ -51,8 +51,9 @@ a{color:var(--cy)}
 .gal b{display:block;font:12px G11,monospace;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gal small{display:block;font:11px G9,monospace;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style></head><body><div class="wrap">
-<h1>랜덤 핀볼</h1>
-<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub" id="dl" style="color:var(--pk);margin:0 0 6px">신청 마감: 10월 27일(화) 밤 10시</p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
+<h1>랜덤 핀볼 <span id="rnd" style="font-size:.7em;color:var(--pk)">2회차</span></h1>
+<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub" id="dl" style="color:var(--pk);margin:0 0 6px">신청 마감: 10월 31일(토) 밤 10시</p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
+<p class="sub" id="pastR" style="margin:-6px 0 16px"><a href="result.html?race=20261027">1회차 결과 보기(10/27 · 1등 외교관)</a></p>
 
 <div class="box">
  <h2>1. 내 캐릭터 그리기</h2>
@@ -84,17 +85,19 @@ a{color:var(--cy)}
 <div class="box"><h2>안내</h2><p class="note">· 신청 때는 인스타그램 아이디와 직업만 받아요. 다른 개인정보는 받지 않아요.<br>· 경품은 없어요. 1등 직업으로 직업도감 영상을 만들어요.<br>· 경기 결과 영상에 아이디와 캐릭터가 나올 수 있어요.<br>· 이 이벤트는 인스타그램이 후원하거나 운영하지 않으며 인스타그램과 관련이 없어요.</p></div>
 <p class="note" style="text-align:center"><a href="https://jobdogam.github.io/">직업도감 홈</a></p>
 </div>
+<script src="round.js"></script>
 <script src="pbfilter.js"></script>
 <script>
 'use strict';
 const FORM='https://docs.google.com/forms/d/e/1FAIpQLScXDaWQa36Pu05vXpAfL49umSO0lU6X1TPI0sV7SP98v11_VQ/formResponse';
-const F_JOB='entry.158041880',F_NICK='entry.1484247861',F_KIND='entry.2061878460',KIND='핀볼이벤트',SEP='␟';
+const F_JOB='entry.158041880',F_NICK='entry.1484247861',F_KIND='entry.2061878460',RND=window.PB_ROUND,KIND=RND.kind,SEP='␟',SK='pinball_sent_r'+RND.n;
 const SPAL=[null,'#000000','#1D2B53','#7E2553','#008751','#AB5236','#5F574F','#C2C3C7','#FFF1E8','#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#83769C','#FF77A8','#FFCCAA'];
 const N=12;let px=new Array(N*N).fill(0),cur=9,mirror=false;
 const $=i=>document.getElementById(i);
 const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 // 한 브라우저 1번(사연 폼 jd:story와 같은 방식): 보낸 기록이 있으면 같은 아이디로 '내 신청 수정'만. 저장소가 막힌 브라우저는 그냥 진행.
-const sentRec=()=>{try{const o=JSON.parse(localStorage.getItem('pinball_sent')||'null');if(o&&o.id)return o}catch(e){}const id=LS.get('pinball_id');return id?{id,job:LS.get('pinball_job')||''}:null};
+// 회차마다 따로(SK=pinball_sent_r회차): 1회차에 신청한 브라우저도 2회차엔 새로 신청할 수 있음
+const sentRec=()=>{try{const o=JSON.parse(localStorage.getItem(SK)||'null');if(o&&o.id)return o}catch(e){}return null};
 let lastSend=0;const COOL=30e3;
 // 팔레트
 const pal=$('pal');[0,...Array.from({length:16},(_,i)=>i+1)].forEach(v=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',v?'색 '+v:'지우개');if(v)b.style.background=SPAL[v];else b.className='er';b.onclick=()=>{cur=v;[...pal.children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};if(v===9)b.classList.add('on');pal.appendChild(b)});
@@ -121,14 +124,16 @@ $('id').value=LS.get('pinball_id')||'';$('job').value=LS.get('pinball_job')||'';
 function lockId(){const r=sentRec();if(!r)return;const v=$('id');v.value=r.id;v.readOnly=true;v.style.color='var(--sub)';$('send').textContent='내 신청 수정 ▶';$('sentNote').textContent=`이 브라우저에선 @${r.id} 님으로 이미 신청했어요. 직업·그림만 고쳐서 다시 보낼 수 있어요(마지막 신청으로 바뀌어요).`}
 const normId=v=>v.trim().replace(/^@+/,'').toLowerCase();
 const nJob=s=>s.toLowerCase().replace(/[\s·()・,.\-]/g,'');let MADE=new Set();
-fetch('../made.json?'+Date.now()).then(r=>r.json()).then(a=>{MADE=new Set(a.map(nJob));chkJob();if(ST.length)paintStat()}).catch(()=>{});
+fetch('../made.json?'+Date.now()).then(r=>r.json()).then(a=>{a.forEach(x=>MADE.add(nJob(x)));chkJob();if(ST.length)paintStat()}).catch(()=>{});
+fetch('races/winners.json?'+Date.now()).then(r=>r.json()).then(a=>{a.forEach(w=>w&&w.job&&MADE.add(nJob(w.job)));chkJob();if(ST.length)paintStat()}).catch(()=>{});
 let BLOCK=new Set();fetch('../blocked.json?'+Date.now()).then(r=>r.json()).then(a=>{BLOCK=new Set(a.map(nJob));chkJob();if(ST.length)paintStat()}).catch(()=>{});
 const isBlocked=j=>{const k=nJob(j);return BLOCK.has(k)||/av배우|av남배우|av여배우|포르노|성인배우/.test(k)};
 const isMade=j=>MADE.has(nJob(j));
 function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isBlocked(j)?'이 직업은 직업도감에서 다루지 않아요. 다른 직업을 적어 주세요.':j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
 $('job').addEventListener('input',chkJob);
 $('id').addEventListener('input',()=>{const v=normId($('id').value);$('prevName').textContent=v?'@'+v:'@아이디'});lockId();$('id').dispatchEvent(new Event('input'));
-const DL=Date.UTC(2026,9,27,13,0,0);function dlChk(){const left=DL-Date.now();if(left<=0){$('dl').textContent='신청이 마감됐어요. 결과 영상을 기다려 주세요!';$('send').disabled=true;$('send').textContent='신청 마감';return true}const h=Math.floor(left/3600e3),m=Math.floor(left%3600e3/60e3);$('dl').textContent='신청 마감: 오늘 밤 10시 · '+(h?h+'시간 ':'')+m+'분 남았어요';return false}dlChk();setInterval(dlChk,30000);
+const DL=RND.dlMs-RND.dlMs%60000;$('rnd').textContent=RND.n+'회차';{const p=(window.PB_ROUNDS||[]).filter(r=>r.n<RND.n&&r.winner);if(p.length)$('pastR').innerHTML=p.slice(-3).reverse().map(r=>`<a href="result.html?race=${r.date}">${r.n}회차 결과 보기(${+r.date.slice(4,6)}/${+r.date.slice(6)} · 1등 ${String(r.winner).replace(/[&<>"]/g,'')})</a>`).join(' · ')}
+function dlChk(){const left=DL-Date.now();if(left<=0){$('dl').textContent='신청이 마감됐어요. 결과 영상을 기다려 주세요!';$('send').disabled=true;$('send').textContent='신청 마감';return true}const d=Math.floor(left/864e5),h=Math.floor(left%864e5/3600e3),m=Math.floor(left%3600e3/60e3);const today=new Date(DL+9*3600e3).toISOString().slice(0,10)===new Date(Date.now()+9*3600e3).toISOString().slice(0,10);$('dl').textContent='신청 마감: '+(today?'오늘 밤 10시':RND.dl)+' · '+(d?d+'일 ':'')+(h?h+'시간 ':'')+m+'분 남았어요';return false}dlChk();setInterval(dlChk,30000);
 $('send').onclick=async()=>{if(dlChk()){$('msg').textContent='신청이 마감됐어요';return}const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
  if(!/^[a-z0-9._]{1,30}$/.test(id)){msg('인스타그램 아이디를 확인해 주세요');$('id').focus();return}
  if(job.length<2){msg('보고 싶은 직업을 적어 주세요');$('job').focus();return}
@@ -139,7 +144,7 @@ $('send').onclick=async()=>{if(dlChk()){$('msg').textContent='신청이 마감�
  const last=Math.max(lastSend,+(LS.get('pinball_last')||0));if(Date.now()-last<COOL){msg(`방금 보냈어요. ${Math.ceil((COOL-(Date.now()-last))/1000)}초 뒤에 다시 보낼 수 있어요`);return}
  const b=$('send');b.disabled=true;b.textContent='보내는 중…';
  const body=new URLSearchParams();body.set(F_JOB,job);body.set(F_NICK,id+SEP+'p:'+code());body.set(F_KIND,KIND);
- try{await fetch(FORM,{method:'POST',mode:'no-cors',body});lastSend=Date.now();LS.set('pinball_last',String(lastSend));LS.set('pinball_id',id);LS.set('pinball_job',job);LS.set('pinball_sent',JSON.stringify({id,job,t:lastSend}));lockId();msg(`@${id} 님 참가 완료! 핀볼 영상에서 내 캐릭터를 찾아보세요`);b.textContent='내 신청 수정 ▶';makeTicket(id,job)}
+ try{await fetch(FORM,{method:'POST',mode:'no-cors',body});lastSend=Date.now();LS.set('pinball_last',String(lastSend));LS.set('pinball_id',id);LS.set('pinball_job',job);LS.set(SK,JSON.stringify({id,job,t:lastSend,r:RND.n}));lockId();msg(`@${id} 님 참가 완료! 핀볼 영상에서 내 캐릭터를 찾아보세요`);b.textContent='내 신청 수정 ▶';makeTicket(id,job)}
  catch(e){msg('보내지 못했어요. 잠시 뒤 다시 눌러 주세요');b.textContent='참가 신청 ▶'}
  b.disabled=false};
 // 참가 티켓(1080x1920, 스토리 크기) — 내 캐릭터 크게 + @아이디 + #직업도감_핀볼
@@ -151,7 +156,7 @@ async function makeTicket(id,job){try{await Promise.all(['28px G14','28px G11','
  const box=(x,y,w,h,col)=>{o.fillStyle='#000';o.fillRect(x,y,w,h);o.fillStyle=col;o.fillRect(x+12,y+12,w-24,h-24);o.fillStyle='#000';o.fillRect(x+24,y+24,w-48,h-48)};
  box(60,120,960,1680,'#FFEC27');
  const T=(t,x,y,size,col,font)=>{o.font=`${size}px ${font},monospace`;o.textAlign='center';o.textBaseline='middle';o.fillStyle='#7E2553';o.fillText(t,x+6,y+6);o.fillStyle=col;o.fillText(t,x,y)};
- T('직업도감 랜덤 핀볼',540,250,56,'#C2C3C7','G11');T('참가 티켓',540,360,120,'#FFEC27','G14');
+ T('직업도감 랜덤 핀볼 '+RND.n+'회차',540,250,56,'#C2C3C7','G11');T('참가 티켓',540,360,120,'#FFEC27','G14');
  o.fillStyle='#FF77A8';for(let x=120;x<960;x+=36)o.fillRect(x,450,18,8);
  // 캐릭터 12x12 → 칸당 50px
  const S=50,ox=540-6*S,oy=520;o.fillStyle='#111';o.fillRect(ox-30,oy-30,12*S+60,12*S+60);
@@ -176,8 +181,8 @@ function csv(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++)
 function sprC(code){const c=document.createElement('canvas');c.width=c.height=14;const o=c.getContext('2d');if(code&&code.length===144){for(const [ox,oy] of [[0,1],[2,1],[1,0],[1,2]])for(let i=0;i<144;i++)if(parseInt(code[i],17)){o.fillStyle='#000';o.fillRect(i%12+ox,(i/12|0)+oy,1,1)}for(let i=0;i<144;i++){const v=parseInt(code[i],17);if(v){o.fillStyle=SPAL[v];o.fillRect(i%12+1,(i/12|0)+1,1,1)}}}else{o.fillStyle='#5F574F';o.beginPath();o.arc(7,7,5,0,7);o.fill()}return c}
 let ST=[],stShow=60;
 // 집계는 관리자·게임과 같은 규칙(pbfilter.js): 같은 아이디 마지막 1건, 의심 묶음은 1명
-async function loadStat(){try{const t=await (await fetch(GV+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();
- const F=PBF.filter(csv(t).slice(1));ST=F.groups.map(g=>({job:g.rep.job,id:g.rep.id,look:g.rep.look}));pbCount(ST.length);
+async function loadStat(){try{const t=await (await fetch(GV+encodeURIComponent("select * where D = '"+KIND+"'"),{cache:'no-store'})).text();
+ const F=PBF.filter(csv(t).slice(1),{deadline:RND.dlMs});ST=F.groups.map(g=>({job:g.rep.job,id:g.rep.id,look:g.rep.look}));pbCount(ST.length);
  paintStat();$('stUpd').textContent=`참가 ${ST.length}명 · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 기준 · 1분마다 갱신`}catch(e){$('stUpd').textContent='현황을 불러오지 못했어요. 잠시 뒤 다시 보여 줄게요.'}}
 function paintStat(){const m=new Map();for(const e of ST){const k=nJob(e.job);if(MADE.has(k)||isBlocked(e.job))continue;const q=m.get(k)||{job:e.job,n:0};q.n++;m.set(k,q)}
  const js=[...m.values()].sort((a,b)=>b.n-a.n||a.job.localeCompare(b.job)).slice(0,20),mx=Math.max(1,...js.map(j=>j.n));

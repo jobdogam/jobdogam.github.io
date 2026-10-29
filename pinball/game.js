@@ -1,6 +1,6 @@
 'use strict';
 // ================= 기본 =================
-const FORM_KIND='핀볼이벤트';
+const FORM_KIND=(window.PB_ROUND||{}).kind||'핀볼이벤트';// 회차별 구분(round.js)
 const GVIZ='https://docs.google.com/spreadsheets/d/18XwQDvv-OFtv9NA1V1a9SiSLaR6oFu5gNjZfZsZ7qRg/gviz/tq?gid=470754975&tqx=out:csv&tq=';
 const P={k:'#000000',nv:'#1D2B53',pu:'#7E2553',dg:'#008751',br:'#AB5236',dk:'#5F574F',lg:'#C2C3C7',wh:'#FFF1E8',rd:'#FF004D',or:'#FFA300',ye:'#FFEC27',gr:'#00E436',bl:'#29ADFF',la:'#83769C',pk:'#FF77A8',pe:'#FFCCAA',cy:'#3BF0FF'};
 const BODY=['#FF004D','#FFA300','#FFEC27','#00E436','#29ADFF','#FF77A8','#B06CFF','#FFCCAA','#FFF1E8','#3BF0FF','#AB5236','#83769C'];

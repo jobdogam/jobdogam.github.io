@@ -49,7 +49,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
  <div class="k"><b id="kDraw">-</b><span>캐릭터 직접 그림</span></div>
 </div>
 <div class="box"><h2>경기 돌리기</h2>
- <div class="row"><a class="btn" href="pinball.html?admin=1" target="_blank" rel="noopener">게임 열기(관리 모드)</a><span style="color:var(--sub);font-size:13px">'이벤트 신청 불러오기' → START → 끝나면 '경기 기록 저장'(race_날짜.json을 pinball/races/에 올리고 races/index.json에 날짜 추가).</span></div>
+ <div class="row"><a class="btn" href="pinball.html?admin=1" target="_blank" rel="noopener">게임 열기(관리 모드)</a><span style="color:var(--sub);font-size:13px">'이벤트 신청 불러오기' → START → 끝나면 '경기 기록 저장'(race_날짜.json을 pinball/races/에 올리고 races/index.json에 날짜, races/winners.json에 {round,date,job} 추가 — 1등 직업은 사이트에 '핀볼 1등!'으로 자동 표시). 회차·마감 바꾸기는 round.js.</span></div>
 </div>
 <div class="box"><h2>의심 묶음 (묶음당 1표·게임엔 1명만)</h2>
  <p style="color:var(--sub);font-size:13px;margin:0 0 8px">같은 직업이 20초 안 간격으로 4건 이상 연달아 들어오거나, 10분 안에 아이디가 한 글자만 다르거나, 막 친 아이디(모음 거의 없음) 둘이 같은 그림(기본·랜덤 틀 제외)이면 한 사람으로 봐요. 시트 원본은 그대로예요.</p>
@@ -65,6 +65,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}
 </div>
 <div class="box"><h2>최근 신청</h2><div class="scroll"><table><thead><tr><th>시각</th><th>아이디</th><th>직업</th><th></th></tr></thead><tbody id="tRecent"></tbody></table></div></div>
 </div>
+<script src="round.js"></script>
 <script src="pbfilter.js"></script>
 <script>
 'use strict';
@@ -84,9 +85,10 @@ async function load(){
  try{
   try{const m=await (await fetch('../made.json?'+Date.now())).json();MADE=new Set(m.map(norm))}catch(e){}
   try{const b=await (await fetch('../blocked.json?'+Date.now())).json();b.forEach(x=>MADE.add(norm(x)))}catch(e){}
-  const t=await (await fetch(G+encodeURIComponent("select * where D = '핀볼이벤트'"),{cache:'no-store'})).text();
+  try{const w=await (await fetch('races/winners.json?'+Date.now())).json();w.forEach(x=>x&&x.job&&MADE.add(norm(x.job)))}catch(e){}
+  const t=await (await fetch(G+encodeURIComponent("select * where D = '"+RK+"'"),{cache:'no-store'})).text();
   const rows=parseCSV(t).slice(1).filter(r=>r.length>=3);
-  const F=PBF.filter(rows);FR=F;
+  const F=PBF.filter(rows,{deadline:RND.dlMs||0});FR=F;
   // 참가 캐릭터 = 묶음 대표 1명씩(게임에 나오는 그대로)
   ENTRIES=F.groups.map(g=>({ts:g.rep.tsText,job:g.rep.job,id:g.rep.id,look:g.rep.look,n:g.n}));
   const jm=new Map();
@@ -110,6 +112,7 @@ function paintCh(){const q=norm($('qCh').value),g=$('gCh');g.innerHTML='';
  for(const e of ENTRIES.slice().reverse()){if(q&&!norm(e.id+e.job).includes(q))continue;const d=document.createElement('div');d.className='ch'+(e.made?' x':'');d.appendChild(sprite(e.look));d.insertAdjacentHTML('beforeend',`<div class="jb">${esc(e.job)}</div><div class="id">@${esc(e.id)}${e.n>1?` <span class="sus">외 ${e.n-1}(묶음)</span>`:''}</div>`);g.appendChild(d)}}
 function paintRecent(rows){$('tRecent').innerHTML=rows.slice(-50).reverse().map(r=>{const pk=(r[2]||'').split('\u241f'),id=(pk[0]||'').trim().replace(/^@+/,''),made=MADE.has(norm(r[1]));return `<tr><td style="white-space:nowrap">${esc((r[0]||'').replace(/^\d+\. /,''))}</td><td>@${esc(id)}</td><td>${esc(r[1]||'')}</td><td>${made?'<span class="made">제외</span>':''}</td></tr>`}).join('')}
 $('qJob').addEventListener('input',paintJobs);$('qCh').addEventListener('input',paintCh);$('reload').onclick=load;
+const RND=window.PB_ROUND||{n:1,kind:'핀볼이벤트'},RK=RND.kind;document.querySelector('#main h1').textContent=`랜덤 핀볼 ${RND.n}회차 신청 현황 (마감 ${RND.dl||''})`;
 const PH='e972c0584b62081a76f651221498ad8001bde72c8ec79afad63d3d7d73b7de49';
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 let started=false;function open_(){$('gate').remove();$('main').hidden=false;if(!started){started=true;load();setInterval(load,60000)}}

@@ -244,9 +244,9 @@ function frame(ts){const dt=Math.min(.25,(ts-lastTs)/1000);lastTs=ts;accF+=dt;le
 function parseList(text){const seen=new Set(),out=[];for(let line of text.split(/\n/)){line=line.trim();if(!line)continue;const m=line.match(/@([A-Za-z0-9._가-힣]{1,30})/);const id=m?m[1].toLowerCase():'';const lk=(line.match(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/)||[])[1]||'';const job=line.replace(/@[A-Za-z0-9._가-힣]+/,'').replace(/#(c\d+f\d+h\d+|p:[0-9a-g]{144})/,'').replace(/[,\t|/]+/g,' ').trim().slice(0,12);if(!job)continue;if(id&&seen.has(id))continue;if(id)seen.add(id);out.push({job,id,look:lk})}return out}
 function parseCSV(s){const out=[];let row=[],f='',q=false;for(let i=0;i<s.length;i++){const ch=s[i];if(q){if(ch=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=ch}else if(ch=='"')q=true;else if(ch==','){row.push(f);f=''}else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&s[i+1]=='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=ch}if(f||row.length){row.push(f);out.push(row)}return out}
 const $=id=>document.getElementById(id),msg=s=>$('msg').textContent=s;
-const PB_DEADLINE=Date.UTC(2026,9,27,13,0,59);// 10/27 22:00 KST 마감(사용자 10/27 10:28)
+const PB_DEADLINE=(window.PB_ROUND&&window.PB_ROUND.dlMs)||Date.UTC(2026,9,27,13,0,59);// 회차 마감은 round.js 한 곳에서(1회차 10/27 22:00 KST)
 function pbTime(s){const m=String(s||'').match(/(\d+)\.\s*(\d+)\.\s*(\d+)\s*(오전|오후)\s*(\d+):(\d+):?(\d+)?/);if(!m)return 0;let h=+m[5]%12;if(m[4]==='오후')h+=12;return Date.UTC(+m[1],+m[2]-1,+m[3],h-9,+m[6],+(m[7]||0))}
-$('load').onclick=async()=>{msg('불러오는 중…');try{const r=await fetch(GVIZ+encodeURIComponent(`select * where D = '${FORM_KIND}'`),{cache:'no-store'});const rows=parseCSV(await r.text()).slice(1);
+$('load').onclick=async()=>{msg(((window.PB_ROUND||{}).n?window.PB_ROUND.n+'회차 ':'')+'불러오는 중…');try{const r=await fetch(GVIZ+encodeURIComponent(`select * where D = '${FORM_KIND}'`),{cache:'no-store'});const rows=parseCSV(await r.text()).slice(1);
  // 공통 집계(pbfilter.js): 같은 아이디 마지막 1건 + 의심 묶음은 대표 1명만 공으로
  const F=PBF.filter(rows,{deadline:PB_DEADLINE});const reps=F.groups.map(g=>g.rep);
  $('list').value=reps.map(o=>`${o.job} @${o.id}${o.look?' #p:'+o.look:''}`).join('\n');await loadMade();updInfo(`${F.entries.length}명 신청 중 ${reps.length}명을 불러왔어요`+(F.bundles.length?` (의심 묶음 ${F.bundles.length}개는 1명씩)`:''))}catch(e){msg('불러오지 못했어요. 목록을 직접 붙여 넣어 주세요')}};
@@ -255,7 +255,7 @@ function demoText(n=24){const J=['피아니스트','한의사','농구선수','�
  const out=[];for(let i=0;i<n;i++){if(i<24)out.push(`${J[i]} @${I[i]}${i<2?' #p:'+SP[i]:''}`);else{let id='';const L=5+Math.floor(r()*5);for(let k=0;k<L;k++)id+=r()<.2?String(Math.floor(r()*10)):A[Math.floor(r()*26)];if(r()<.3)id+=(r()<.5?'_':'.')+Math.floor(r()*99);out.push(`${J2[(i-24)%J2.length]}${i>=44?' '+(Math.floor((i-24)/J2.length)+1)+'호':''} @참가자${i+1}`)}}return out.join('\n')}
 $('demo').onclick=()=>{$('list').value=demoText(+(QS.get('n')||24));updInfo()};
 // 같은 직업은 공 1개(신청자 수와 상관없이), 이미 만든 직업(../made.json)은 뺌
-let MADE=new Set();async function loadMade(){try{const r=await fetch('../made.json?'+Date.now(),{cache:'no-store'});const a=await r.json();MADE=new Set(a.map(normJob))}catch(e){}try{const r=await fetch('../blocked.json?'+Date.now(),{cache:'no-store'});const b=await r.json();b.forEach(x=>MADE.add(normJob(x)))}catch(e){}}
+let MADE=new Set();async function loadMade(){try{const r=await fetch('../made.json?'+Date.now(),{cache:'no-store'});const a=await r.json();MADE=new Set(a.map(normJob))}catch(e){}try{const r=await fetch('../blocked.json?'+Date.now(),{cache:'no-store'});const b=await r.json();b.forEach(x=>MADE.add(normJob(x)))}catch(e){}try{const r=await fetch('races/winners.json?'+Date.now(),{cache:'no-store'});const w=await r.json();w.forEach(x=>x&&x.job&&MADE.add(normJob(x.job)))}catch(e){}}// 지난 회차 핀볼 1등(이미 만든 직업)도 뺌
 // 신청자 한 명당 공 1개(각자 그린 캐릭터), 이미 만든 직업(../made.json)은 뺌. k = 같은 직업 신청 수
 function groupJobs(list){let ex=0;const exJ=new Set(),cnt=new Map(),keep=[];
  for(const e of list){const k=normJob(e.job);if(!k)continue;if(MADE.has(k)){ex++;exJ.add(k);continue}keep.push(e);cnt.set(k,(cnt.get(k)||0)+1)}
@@ -275,7 +275,7 @@ function startRace(seed){const list=curList();if(list.length<2){msg('직업을 2
  if(!AREC){sndOn=$('sound').checked;audioInit()}lastMode=REPLAY?!!REPLAY.last:$('lastMode').checked;tempo=150;START_N=list.length;build();makeBalls(list);simT=-3.4;acc=0;{const sb=START,z=Math.min(1,(W-16)/(sb.w+20),(H*.42)/(sb.h+20));cam={x:500,y:sb.top+sb.h/2-70/z,z}}stageShow={i:-1,t:-9};stageLog=[];timers=[];VT=0;lastTick=-9;slow=1; // 경기마다 시계 0부터(페이지를 오래 켜 둔 라이브도 다시보기와 같은 시각)
  meteorZone.next=3;state='run';$('panel').style.display='none';
  // 기록(다시보기용): 직업별 공 목록·가린 아이디·캐릭터 코드·시드
- RACE={v:4,date:ymd(),seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,k:e.k||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
+ RACE={v:4,date:(ADMIN&&!REPLAY&&!PRACTICE&&window.PB_ROUND)?window.PB_ROUND.date:ymd(),round:(ADMIN&&!REPLAY&&!PRACTICE&&window.PB_ROUND)?window.PB_ROUND.n:undefined,seed,last:lastMode,apps:INFO.apps,jobs:INFO.jobs,list:list.map(e=>({job:e.job,n:e.n||1,k:e.k||1,id:e.id?maskNick(e.id):'',ids:(e.ids||[]).map(maskNick),look:e.look||''}))};
  applyFind();
  const t=aNow();if(t!=null){[0,1,2].forEach(i=>tone(440,t+.4+i,.14,'square',.06));tone(880,t+3.4,.3,'square',.07);later(3.4,musicStart)}return true}
 $('start').onclick=()=>startRace();

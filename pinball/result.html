@@ -50,12 +50,15 @@ ol li span{font-size:13px;color:var(--muted);white-space:nowrap}
 .fine{color:var(--muted);font-size:12px;margin-top:20px;line-height:1.6}
 </style></head><body><div class="wrap">
 <div class="top"><h1>랜덤 핀볼 결과</h1><a class="tag" href="../">직업도감</a></div>
+<a id="nextR" class="btn" href="event.html" hidden></a>
 <div id="main"><div class="empty">불러오는 중…</div></div>
 <h2 id="pastH" hidden>지난 경기</h2><div class="past" id="past"></div>
 <p class="fine">아이디는 일부만 보여요. 경기 영상과 다시보기는 같은 시드로 똑같이 재생돼요.</p>
 </div>
+<script src="round.js"></script>
 <script>
 'use strict';
+const RNDS=window.PB_ROUNDS||[],RNOW=window.PB_ROUND||null,rOf=d=>RNDS.find(r=>r.date===d);
 const $=i=>document.getElementById(i);
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const maskNick=s=>{s=String(s||'').trim();const a=[...s];return a.length<=2?(a[0]||'')+'*':a.slice(0,2).join('')+'***'};
@@ -71,17 +74,18 @@ async function listRaces(){try{const a=await getJSON('races/index.json');return 
 function paint(d,R){
  const res=R.result||null,top=res&&res.top||[],w=top[0],apps=R.apps||R.list.reduce((s,e)=>s+(e.n||1),0),jobs=R.jobs||new Set(R.list.map(e=>String(e.job).toLowerCase().replace(/[\s·()・,.\-]/g,''))).size;
  const look=w&&(w.look||(R.list.find(e=>e.job===w.job)||{}).look);
- let h=`<div class="date">${fmt(d)} 경기</div><div class="q">${R.last?'꼴찌가 당첨된 직업은?':'1등으로 골인한 직업은?'}</div>`;
+ let h=`<div class="date">${rOf(d)?rOf(d).n+'회차 · ':''}${fmt(d)} 경기</div><div class="q">${R.last?'꼴찌가 당첨된 직업은?':'1등으로 골인한 직업은?'}</div>`;
  if(w){h+=`<div class="win"><div class="lb">우승</div><div class="job">${esc(w.job)}</div><div class="sub">${who(w)?who(w)+' 님 신청 · ':''}직업도감이 다음 편으로 만들어요</div>${(w.k||w.n||1)>1?`<div class="ids">같은 직업 신청 ${w.k||w.n}명</div>`:''}</div>`;
   h+=`<div class="grid2">${[1,2].map(i=>top[i]?`<div class="card"><div class="lb">${i+1}등</div><div class="job">${esc(top[i].job)}</div><div class="sub">${who(top[i])||'&nbsp;'}</div></div>`:'').join('')}</div>`;
   if(res.bad)h+=`<div class="card bad"><div class="lb">불운상 · 번개·함정을 가장 많이 맞은 사람</div><div class="job">${esc(res.bad.job)}</div><div class="sub">${who(res.bad)?who(res.bad)+' · ':''}번개 ${res.bad.light||0}번 · 함정 ${res.bad.trap||0}번</div></div>`}
  else h+=`<div class="empty">이 경기 기록에는 결과가 없어요.${(R.v|0)>=4?' 다시보기로 확인해 주세요.':''}</div>`;
  h+=`<div class="stats"><div><b>${apps.toLocaleString()}</b><span>참가(공)</span></div><div><b>${jobs.toLocaleString()}</b><span>서로 다른 직업</span></div></div>`;
- h+=`<div class="btns">${(R.v|0)>=4?`<a class="btn" href="pinball.html?replay=${d}">경기 다시보기</a>`:''}<a class="btn g" href="event.html">다음 경기 참가하기</a></div>`;
+ h+=`<div class="btns">${(R.v|0)>=4?`<a class="btn" href="pinball.html?replay=${d}">경기 다시보기</a>`:''}<a class="btn g" href="event.html">${RNOW&&RNOW.date!==d&&RNOW.dlMs>Date.now()?RNOW.n+'회차 신청하기 →':'다음 경기 참가하기'}</a></div>`;
  if(top.length){h+=`<h2>최종 순위 상위 20</h2><ol>${top.slice(0,20).map((x,i)=>`<li><i>${i+1}</i><b>${esc(x.job)}${who(x)?`<small>${who(x)}</small>`:''}</b><span>${(x.k||x.n||1)>1?`같은 직업 ${x.k||x.n}명`:''}</span></li>`).join('')}</ol>`}
  $('main').innerHTML=h;const c=spr(look);if(c){c.setAttribute('aria-label','우승 직업 캐릭터');$('main').querySelector('.win').appendChild(c)}}
+if(RNOW&&RNOW.dlMs>Date.now()){const b=$('nextR');b.textContent=`랜덤 핀볼 ${RNOW.n}회차 신청 중 · ${RNOW.dl} 마감 →`;b.hidden=false;b.style.cssText='display:block;margin:0 0 12px'}
 (async()=>{const q=new URLSearchParams(location.search).get('race'),list=await listRaces();let d=q&&/^\d{8}$/.test(q)?q:list[0];
- if(list.length){$('pastH').hidden=false;$('past').innerHTML=list.slice(0,20).map(x=>`<a href="?race=${x}"${x===d?' class="on"':''}>${+x.slice(4,6)}/${+x.slice(6)}</a>`).join('')}
+ if(list.length){$('pastH').hidden=false;$('past').innerHTML=list.slice(0,20).map(x=>`<a href="?race=${x}"${x===d?' class="on"':''}>${rOf(x)?rOf(x).n+'회차 ':''}${+x.slice(4,6)}/${+x.slice(6)}</a>`).join('')}
  if(!d){$('main').innerHTML='<div class="empty">아직 공개된 경기가 없어요.</div>';return}
  try{paint(d,await getJSON(`races/race_${d}.json`));document.title=`랜덤 핀볼 결과 · ${fmt(d)}`}catch(e){$('main').innerHTML=`<div class="empty">${fmt(d)} 경기 기록을 찾지 못했어요.</div>`}})();
 </script></body></html>
