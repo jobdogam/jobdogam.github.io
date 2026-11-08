@@ -52,7 +52,7 @@ a{color:var(--cy)}
 .gal small{display:block;font:11px G9,monospace;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 </style></head><body><div class="wrap">
 <h1>랜덤 핀볼 <span id="rnd" style="font-size:.7em;color:var(--pk)">2회차</span></h1>
-<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub" id="dl" style="color:var(--pk);margin:0 0 6px">신청 마감: 10월 29일(목) 밤 10시</p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br>1등으로 골인한 직업을 직업도감이 만들어요!</p>
+<p class="sub" id="pbCnt" style="color:var(--yel);margin:0 0 6px"></p><p class="sub" id="dl" style="color:var(--pk);margin:0 0 6px">신청 마감: 10월 29일(목) 밤 10시</p><p class="sub">보고 싶은 직업을 신청하세요.<br>신청한 직업들이 우주부터 용암까지 굴러가요.<br><span id="prz">1등으로 골인한 직업을 직업도감이 만들어요!</span></p>
 <p class="sub" id="pastR" style="margin:-6px 0 16px"><a href="result.html?race=20261027">1회차 결과 보기(10/27 · 1등 외교관)</a></p>
 
 <div class="box">
@@ -132,7 +132,7 @@ const isMade=j=>MADE.has(nJob(j));
 function chkJob(){const j=$('job').value.trim();$('jobNote').textContent=j&&isBlocked(j)?'이 직업은 직업도감에서 다루지 않아요. 다른 직업을 적어 주세요.':j&&isMade(j)?'이미 직업도감에 나왔거나 만들고 있는 직업이에요. 다른 직업을 적어 주세요.':''}
 $('job').addEventListener('input',chkJob);
 $('id').addEventListener('input',()=>{const v=normId($('id').value);$('prevName').textContent=v?'@'+v:'@아이디'});lockId();$('id').dispatchEvent(new Event('input'));
-const DL=RND.dlMs-RND.dlMs%60000;$('rnd').textContent=RND.n+'회차';{const p=(window.PB_ROUNDS||[]).filter(r=>r.n<RND.n&&r.winner);if(p.length)$('pastR').innerHTML=p.slice(-3).reverse().map(r=>`<a href="result.html?race=${r.date}">${r.n}회차 결과 보기(${+r.date.slice(4,6)}/${+r.date.slice(6)} · 1등 ${String(r.winner).replace(/[&<>"]/g,'')})</a>`).join(' · ')}
+const DL=RND.dlMs-RND.dlMs%60000;if(RND.prize)$('prz').textContent=RND.prize;$('rnd').textContent=RND.n+'회차';{const p=(window.PB_ROUNDS||[]).filter(r=>r.n<RND.n&&r.winner);if(p.length)$('pastR').innerHTML=p.slice(-3).reverse().map(r=>`<a href="result.html?race=${r.date}">${r.n}회차 결과 보기(${+r.date.slice(4,6)}/${+r.date.slice(6)} · 1등 ${String(r.winner).replace(/[&<>"]/g,'')})</a>`).join(' · ')}
 function dlChk(){const left=DL-Date.now();if(left<=0){$('dl').textContent='신청이 마감됐어요. 결과 영상을 기다려 주세요!';$('send').disabled=true;$('send').textContent='신청 마감';return true}const d=Math.floor(left/864e5),h=Math.floor(left%864e5/3600e3),m=Math.floor(left%3600e3/60e3);const today=new Date(DL+9*3600e3).toISOString().slice(0,10)===new Date(Date.now()+9*3600e3).toISOString().slice(0,10);$('dl').textContent='신청 마감: '+(today?'오늘 밤 10시':RND.dl)+' · '+(d?d+'일 ':'')+(h?h+'시간 ':'')+m+'분 남았어요';return false}dlChk();setInterval(dlChk,30000);
 $('send').onclick=async()=>{if(dlChk()){$('msg').textContent='신청이 마감됐어요';return}const id=normId($('id').value),job=$('job').value.trim();const msg=s=>$('msg').textContent=s;
  if(!/^[a-z0-9._]{1,30}$/.test(id)){msg('인스타그램 아이디를 확인해 주세요');$('id').focus();return}
